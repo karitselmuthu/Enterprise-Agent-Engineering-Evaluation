@@ -113,3 +113,31 @@ The check exits nonzero on failure and writes
 `reports/scenario_results/mode_a_validation.json`. It verifies event order,
 future-event hiding, changing evidence and advice, recovery, and repeatability.
 See [simulation details](docs/simulation.md) for the agent/data boundary.
+
+### Mode B live polling and concurrency
+
+Mode B publishes the same public scenario events at a configurable wall-clock
+interval. Each poll receives a frozen event snapshot, so its three tool calls
+observe the same virtual minute even when the publisher advances concurrently.
+Run the default three-client check (about 0.35 seconds of scheduled events):
+
+```sh
+python3 -m scripts.validate_mode_b
+python3 -m unittest tests.integration.test_mode_b_validation -v
+```
+
+To slow the publisher and change the polling load:
+
+```sh
+python3 -m scripts.validate_mode_b --interval 0.5 --poll-interval 0.1 --clients 8
+```
+
+`--interval` is seconds per scenario event; `--poll-interval` is seconds between
+polls for each client. The command exits nonzero if publication, overlapping
+polls, snapshot consistency, or final recovery checks fail. It writes every
+poll's status, tool outcomes, and answer to
+`reports/scenario_results/mode_b_validation.json`. A polling client can miss
+short-lived intermediate states if its interval is too long; inspect the
+report's observed minutes to see which states each client actually sampled.
+The publisher paces deterministic synthetic events; it does not generate new
+random incidents or connect to production infrastructure.

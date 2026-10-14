@@ -9,7 +9,9 @@ flowchart LR
     Generator[Offline fixture generator] --> Public[Public scenario events]
     Generator --> Truth[Private evaluation labels]
     Public --> Replay[Virtual-clock replay engine]
+    Public --> Live[Wall-clock event publisher]
     Replay --> Tools[Three standard tools]
+    Live --> Tools
     Tools --> Agent[Baseline investigator]
     Agent --> Evaluation[Evaluation runner]
     Truth --> Evaluation
@@ -63,12 +65,22 @@ The Mode A acceptance check replays `SIM-004` at virtual minutes 15, 25, and
 35. It verifies that later events remain hidden, evidence and advice change as
 the incident develops, and the final status is resolved. `--minute 15` (or
 `25` or `35`) prints a single observation and agent answer. The fixed replay
-does not wait for real time; live polling remains a later mode.
+does not wait for real time.
+
+Mode B (`simulation/live.py`) publishes the same public event stream one event
+per configurable wall-clock interval. The first event is available immediately.
+Each poll creates a frozen replay engine containing only events published at
+poll start and runs the baseline investigator in a worker thread. Concurrent
+pollers therefore cannot mix observations from different virtual minutes in
+one investigation. `python3 -m scripts.validate_mode_b` runs three concurrent
+pollers and checks pacing, published event order, snapshot consistency, and
+final recovery. Its JSON report lists the minutes each poller actually saw.
+`--interval`, `--poll-interval`, and `--clients` change the load. Slow pollers
+may miss short-lived states, which is an expected property of polling.
 
 The file separation is an architectural data boundary, not a security sandbox.
 A future untrusted agent needs process or service isolation so it cannot read
 the evaluation files or inspect in-process tool handlers.
 
-Live event generation, large-scale data volumes, concurrent investigations,
-multiple seeds, holdout scenarios, and stronger groundedness judging are later
-milestones.
+Fresh event synthesis during a run, large-scale data volumes, multiple seeds,
+holdout scenarios, and stronger groundedness judging are later milestones.
