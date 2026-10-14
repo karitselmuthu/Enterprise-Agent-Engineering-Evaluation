@@ -47,3 +47,6 @@ project with `python3 -m pip install -e .` before running the MCP experiment.
 
 Phase 6.3 adds SQLite-backed investigation memory. The memory experiment
 shows a session resuming after the agent is reconstructed.
+
+Phase 6.4 adds section-level TF-IDF search over five sample IT runbooks and
+adds cited runbook guidance to MCP incident investigations.

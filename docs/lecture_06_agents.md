@@ -34,3 +34,14 @@ Only explicitly approved facts are added to a new answer.
 The same store also wraps the MCP agent through `StatefulMCPIncidentAgent`.
 
 Run `PYTHONPATH=. python3 experiments/lecture_06/03_memory.py`.
+
+## 6.4 Retrieval
+
+Five short IT runbooks are indexed by section with TF-IDF and cosine
+similarity. `RetrievalIncidentAgent` combines MCP tool results with the
+request, retrieves the highest-ranked sections, includes their source and
+heading in the answer, and saves that answer to SQLite. Only positive-score
+sections are returned. Embedding retrieval is an interface for later work,
+not an active backend.
+
+Run `PYTHONPATH=. .venv/bin/python experiments/lecture_06/04_retrieval.py`.
