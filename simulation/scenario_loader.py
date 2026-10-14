@@ -9,7 +9,9 @@ from typing import Any
 
 DEFAULT_SCENARIOS = Path(__file__).resolve().parents[1] / "data/simulation/scenarios.jsonl"
 PRIVATE_KEYS = {"root_cause", "expected_findings", "expected_tools", "expected_behavior"}
-PUBLIC_TOOL_NAMES = frozenset({"get_incident_record", "get_server_metrics", "get_application_logs"})
+PUBLIC_TOOL_NAMES = frozenset({"get_incident_record", "get_server_metrics",
+                               "get_application_logs", "get_pod_events",
+                               "get_service_network_metrics"})
 
 
 @dataclass(frozen=True)
@@ -50,10 +52,25 @@ def load_scenarios(path: str | Path = DEFAULT_SCENARIOS) -> dict[str, Scenario]:
                     or incident.get("alert_at_minute", 0) < 0
                     or not isinstance(events, list) or not events
                     or not isinstance(allowed_tools, list)
+                    or len(allowed_tools) != len(set(allowed_tools))
                     or any(not isinstance(tool, str) or tool not in PUBLIC_TOOL_NAMES
                            for tool in allowed_tools)
                     or "get_incident_record" not in allowed_tools):
                 raise ValueError("invalid scenario identity or incident")
+            related = incident.get("related_incidents", [])
+            if (not isinstance(related, list)
+                    or any(not isinstance(item, dict)
+                           or not all(isinstance(item.get(key), str) and item[key]
+                                      for key in ("id", "service", "server_id", "summary"))
+                           or item["id"] == scenario_id for item in related)
+                    or len({item["id"] for item in related}) != len(related)):
+                raise ValueError("invalid related incidents")
+            if ("pod_name" in incident and (not isinstance(incident["pod_name"], str)
+                                            or not incident["pod_name"]
+                                            or "get_pod_events" not in allowed_tools)
+                    or incident.get("network_scope") is True
+                    and "get_service_network_metrics" not in allowed_tools):
+                raise ValueError("incident observation tool not permitted")
             previous = -1
             started_at = None
             for event in events:
@@ -72,6 +89,24 @@ def load_scenarios(path: str | Path = DEFAULT_SCENARIOS) -> dict[str, Scenario]:
                             "open", "degraded", "recovering", "resolved", "healthy"}
                         or not isinstance(event.get("faults", []), list)):
                     raise ValueError("invalid event timeline")
+                for field, required in (("pod_events", ("timestamp", "pod", "reason", "message")),
+                                        ("network_peers", ("timestamp", "service", "latency_ms"))):
+                    observations = event.get(field, [])
+                    if (not isinstance(observations, list)
+                            or any(not isinstance(item, dict)
+                                   or any(key not in item for key in required)
+                                   or item["timestamp"] != event["timestamp"]
+                                   for item in observations)):
+                        raise ValueError(f"invalid {field} observations")
+                if (any(not all(isinstance(item[key], str) and item[key]
+                                for key in ("pod", "reason", "message"))
+                        for item in event.get("pod_events", []))
+                        or any(not isinstance(item["service"], str) or not item["service"]
+                               or not isinstance(item["latency_ms"], (int, float))
+                               or isinstance(item["latency_ms"], bool)
+                               or item["latency_ms"] < 0
+                               for item in event.get("network_peers", []))):
+                    raise ValueError("invalid typed observations")
                 try:
                     observed_at = datetime.fromisoformat(event["timestamp"].replace("Z", "+00:00"))
                 except ValueError as exc:

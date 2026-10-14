@@ -18,6 +18,10 @@ def replay_tools(engine: ReplayEngine, allowed: frozenset[str] | None = None) ->
          "server_id", engine.metrics),
         ("get_application_logs", "Read application logs through the current virtual minute.",
          "service", engine.logs),
+        ("get_pod_events", "Read Kubernetes pod events through the current virtual minute.",
+         "pod", engine.pod_events),
+        ("get_service_network_metrics", "Read peer network metrics through the current virtual minute.",
+         "service", engine.network_peers),
     ):
         registry.register(Tool(name, description, {"type": "object",
             "properties": {field: {"type": "string"}}, "required": [field],

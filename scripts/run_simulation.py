@@ -1,4 +1,4 @@
-"""Replay and evaluate the 20 public scenarios with private labels."""
+"""Replay and evaluate the public scenarios with private labels."""
 
 from pathlib import Path
 

@@ -44,14 +44,20 @@ def audit_data(root: Path = ROOT) -> dict:
             "severity_and_message_present": all(
                 {"severity", "message"} <= log.keys() for _, _, log in log_events),
             "service_linked_by_parent_scenario": all(
-                bool(scenario.incident.get("service")) for scenario, _, _ in log_events),
+                log.get("service", scenario.incident["service"]) in
+                {scenario.incident["service"]} | {
+                    related["service"] for related in scenario.incident.get("related_incidents", [])}
+                for scenario, _, log in log_events),
             "absolute_timestamp_present": all("timestamp" in log
                                               for _, _, log in log_events),
             "relative_minute_present": all(isinstance(event["minute"], int)
                                            for _, event, _ in log_events),
         },
         "incident_records": {
-            "target": 500, "simulated_alerts": len(scenarios),
+            "target": 500,
+            "scenario_cases": len(scenarios),
+            "simulated_alerts": sum(1 + len(scenario.incident.get("related_incidents", []))
+                                    for scenario in scenarios.values()),
             "separate_unit_fixtures": len(fixture_incidents),
             "severity_present": all("severity" in scenario.incident
                                     for scenario in scenarios.values()),

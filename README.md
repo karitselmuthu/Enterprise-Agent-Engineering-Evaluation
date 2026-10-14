@@ -75,11 +75,18 @@ records current results and gaps.
 
 ## Simulation milestone
 
-The [simulation layer](docs/simulation.md) adds 20 replayable incident scenarios,
-a virtual clock, and three read-only infrastructure tools. Public observations
+The [simulation layer](docs/simulation.md) adds 25 replayable incident scenarios,
+a virtual clock, and five read-only infrastructure tools. Public observations
 and private evaluation labels are stored separately. Run
 `python3 -m scripts.run_simulation` for a baseline scenario report. This does
 not replace the small deterministic unit-test fixtures.
+
+The [scenario catalog](docs/scenario_catalog.md) lists the 25 distinct cases,
+including pod crashes, cross-service network faults, concurrent incidents,
+missing evidence, and healthy operation. Each private rubric records the
+scenario name, affected service, expected findings, tools, and behavior. The
+baseline report includes these rubrics alongside observed agent traces; tool
+coverage does not imply the agent met every behavioral expectation.
 
 The [data volume audit](docs/data_volume_audit.md) verifies the current five
 dataset categories against the suggested initial sizes. None of those volume

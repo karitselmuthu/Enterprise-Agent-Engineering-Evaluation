@@ -17,13 +17,14 @@ class SimulationAgentTests(unittest.TestCase):
     def setUp(self):
         self.scenarios = load_scenarios()
 
-    def test_all_scenarios_execute_with_three_standard_tools(self):
-        self.assertEqual(len(TOOL_NAMES), 3)
+    def test_all_scenarios_execute_with_permitted_tools(self):
+        self.assertEqual(len(TOOL_NAMES), 5)
         for identifier, scenario in self.scenarios.items():
             with self.subTest(identifier=identifier):
                 state = SimulationInvestigator(replay_tools(
                     ReplayEngine(scenario, VirtualClock(10)))).run(identifier)
-                self.assertEqual(len(state.tool_results), 3)
+                self.assertGreaterEqual(len(state.tool_results), 3)
+                self.assertTrue(all(result.name in TOOL_NAMES for result in state.tool_results))
                 self.assertNotIn("root_cause", str(state.trace))
                 self.assertNotIn("expected_findings", str(state.tool_results))
 
@@ -58,7 +59,7 @@ class SimulationAgentTests(unittest.TestCase):
 
     def test_evaluator_joins_private_labels_after_agent_run(self):
         report = run_simulation_evaluation()
-        self.assertEqual(report["scenario_count"], 20)
+        self.assertEqual(report["scenario_count"], 25)
         self.assertEqual(report["mean_tool_coverage"], 1)
         self.assertLess(report["mean_tool_execution_success"], 1)
 
@@ -67,5 +68,5 @@ class SimulationAgentTests(unittest.TestCase):
             path = Path(directory) / "partial.jsonl"
             path.write_text(json.dumps({"scenario_id": "SIM-001", "root_cause": "x",
                                         "expected_tools": [], "evaluation_minute": 10}) + "\n")
-            with self.assertRaisesRegex(ValueError, "IDs differ"):
+            with self.assertRaisesRegex(ValueError, "Invalid ground truth"):
                 run_simulation_evaluation(truth_path=path)

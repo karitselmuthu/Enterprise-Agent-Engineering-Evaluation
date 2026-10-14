@@ -15,8 +15,8 @@ class SimulationUnitTests(unittest.TestCase):
     def setUp(self):
         self.scenarios = load_scenarios()
 
-    def test_twenty_distinct_scenarios_and_timeline(self):
-        self.assertEqual(len(self.scenarios), 20)
+    def test_twenty_five_distinct_scenarios_and_timeline(self):
+        self.assertEqual(len(self.scenarios), 25)
         self.assertEqual([event["minute"] for event in self.scenarios["SIM-004"].events],
                          list(range(0, 40, 5)))
         self.assertTrue(all([event["minute"] for event in item.events] == [0, 5, 10, 15]

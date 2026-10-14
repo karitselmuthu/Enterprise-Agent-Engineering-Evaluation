@@ -44,16 +44,23 @@ async def validate_mode_b(scenario_id: str = "SIM-004", interval_seconds: float 
     observations: list[dict] = []
     in_flight = 0
     max_in_flight = 0
+    first_poll_barrier = asyncio.Barrier(clients)
 
     async with LiveSimulation(scenario, interval_seconds) as live:
         started = monotonic()
 
         async def run_poller(client: int) -> None:
             nonlocal in_flight, max_in_flight
+            first_poll = True
             while True:
                 in_flight += 1
                 max_in_flight = max(max_in_flight, in_flight)
                 try:
+                    if first_poll:
+                        # Launch one synchronized request wave for a reliable
+                        # concurrency check even on very fast machines.
+                        await first_poll_barrier.wait()
+                        first_poll = False
                     observation = _summarize(await live.poll(), client)
                     observations.append(observation)
                 finally:
