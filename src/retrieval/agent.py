@@ -16,6 +16,10 @@ class RetrievalIncidentAgent(StatefulMCPIncidentAgent):
     async def investigate(self, session_id: str, request: str):
         memory, effective_request = self._prepare(session_id, request)
         state = await self.mcp_agent.run(effective_request)
+        self._enrich(state, effective_request)
+        return self._record(session_id, request, effective_request, memory, state)
+
+    def _enrich(self, state, effective_request: str) -> None:
         if state.tool_results and state.tool_results[-1].ok:
             data = state.tool_results[-1].content
             query = " ".join([effective_request] + [str(value) for value in data.values()])
@@ -28,4 +32,3 @@ class RetrievalIncidentAgent(StatefulMCPIncidentAgent):
                     f"[{Path(hit.section.path).name} / {hit.section.heading}] "
                     f"{hit.section.text}" for hit in hits)
                 state.answer += " Runbook guidance: " + guidance
-        return self._record(session_id, request, effective_request, memory, state)

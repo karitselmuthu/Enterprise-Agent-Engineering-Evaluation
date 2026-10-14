@@ -45,3 +45,14 @@ sections are returned. Embedding retrieval is an interface for later work,
 not an active backend.
 
 Run `PYTHONPATH=. .venv/bin/python experiments/lecture_06/04_retrieval.py`.
+
+## 6.5 Context compaction
+
+`ContextManager` estimates tokens, reserves response capacity, summarizes
+older turns, truncates recent tool output, and removes optional context until
+the input fits. The current request and explicitly approved facts are pinned;
+an overlong critical section raises `ContextBudgetExceeded`. The integrated
+`ContextAwareIncidentAgent` sends this bounded prompt to the MCP agent and
+then retrieves runbook guidance.
+
+Run `PYTHONPATH=. .venv/bin/python experiments/lecture_06/05_context_compaction.py`.

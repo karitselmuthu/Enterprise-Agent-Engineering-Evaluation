@@ -8,6 +8,8 @@ flowchart LR
     MCPClient --> MCPServer[MCP stdio server]
     MCPServer --> Fixtures[Read-only incident fixtures]
     Agent --> Retrieval[TF-IDF runbook retrieval]
+    Memory --> Compaction[Context budget and compaction]
+    Compaction --> Agent
     Retrieval --> Runbooks[Markdown runbooks]
     Agent --> Memory[Short-term state]
     Memory --> SQLite[SQLite investigation store]

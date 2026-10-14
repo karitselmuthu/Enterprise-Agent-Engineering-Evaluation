@@ -1,6 +1,7 @@
 """Stateful wrapper around the incident agent."""
 
 from pathlib import Path
+import re
 
 from src.agents.runtime import IncidentAgent
 from src.agents.state import AgentState
@@ -41,7 +42,9 @@ class StatefulIncidentAgent:
 
     def _record(self, session_id: str, request: str, effective_request: str,
                 memory: ShortTermMemory, state: AgentState) -> AgentState:
-        memory.current_task = effective_request
+        match = re.search(r"INC-\d+", effective_request, re.IGNORECASE)
+        memory.current_task = (f"Investigate {match.group().upper()}"
+                               if match else effective_request)
         memory.add_message("user", request)
         for result in state.tool_results:
             memory.add_tool_result(result.name, result.ok, result.content if result.ok else result.error)
@@ -51,7 +54,7 @@ class StatefulIncidentAgent:
             state.answer += " Approved context: " + "; ".join(item["content"] for item in approved)
         memory.add_message("assistant", state.answer)
         self.long_term.save_investigation(
-            session_id, effective_request, state.answer, user_message=request,
+            session_id, memory.current_task, state.answer, user_message=request,
             tool_results=memory.recent_tool_results[-len(state.tool_results):]
             if state.tool_results else [],
         )

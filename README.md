@@ -50,3 +50,6 @@ shows a session resuming after the agent is reconstructed.
 
 Phase 6.4 adds section-level TF-IDF search over five sample IT runbooks and
 adds cited runbook guidance to MCP incident investigations.
+
+Phase 6.5 adds a configurable context budget with conversation compaction and
+preserved approved facts for long-running investigations.

@@ -11,3 +11,6 @@
 - The five runbooks are teaching fixtures. TF-IDF matches words, so it may
   miss synonyms or rank incidental word overlap. Retrieved text should be
   checked against live incident evidence before operational changes.
+- Context token counts are model-agnostic estimates. A provider-specific
+  tokenizer is needed before treating the configured budget as a hard model
+  context-window guarantee.
