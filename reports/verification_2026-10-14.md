@@ -17,7 +17,7 @@ the project is not yet declared complete.
 | Simulation replay | 20 scenarios; 19 have four timestamps and payment has eight; 60 attempted tool calls, 58 successful; expected tool coverage 1.0; literal root-cause phrase rate 0.0 (not semantic accuracy) |
 | Mode A acceptance | Payment incident observations and advice differ at 10:15 and 10:25 UTC; recovery observed at 10:35 UTC; all replay checks pass |
 | Five-category data volume audit | 0 standalone inventory records, 80 metric samples, 82 log entries, 20 simulated alerts plus 1 separate fixture incident, 5 runbooks; none meets the suggested initial volume |
-| Docker smoke test | Local daemon unavailable; CI Docker job passed on verification commit `77e5644`, including generated-code execution |
+| Docker smoke test | Local daemon unavailable; CI Docker job passed on Mode A commit `dd0c9ff`, including generated-code execution |
 | API endpoints | Not implemented or verified |
 
 Commands used locally:
@@ -31,8 +31,8 @@ Commands used locally:
 .venv/bin/python -m scripts.validate_mode_a
 ```
 
-The simulation milestone's `tests` and `docker-sandbox` jobs both passed in
-[GitHub Actions run 38559000896](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38559000896).
+The Mode A commit's `tests` and `docker-sandbox` jobs both passed in
+[GitHub Actions run 38561760377](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38561760377).
 
 ## Hardware and production gaps
 
