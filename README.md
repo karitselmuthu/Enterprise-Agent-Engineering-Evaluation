@@ -59,3 +59,7 @@ Python log analyzer inside a resource-limited Docker container.
 
 Phase 6.7 adds discoverable, permission-scoped skill manifests for incident
 analysis and service health.
+
+Lecture 7 starts with an optional local Ollama judge for answer assessment.
+The mock backend remains the default for agent development and automated tests.
+See [Lecture 07](docs/lecture_07_evaluation.md).
