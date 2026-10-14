@@ -18,7 +18,7 @@ the project is not yet declared complete.
 | Mode A acceptance | Payment incident observations and advice differ at 10:15 and 10:25 UTC; recovery observed at 10:35 UTC; all replay checks pass |
 | Mode B acceptance | Eight payment events published over 0.354 wall seconds; three polling clients made 96 polls, with three investigations in flight; pacing, snapshot, ordering, and final recovery checks pass |
 | Five-category data volume audit | 0 standalone inventory records, 100 metric samples, 105 log entries, 26 simulated alerts across 25 cases plus 1 separate fixture incident, 5 runbooks; none meets the suggested initial volume |
-| Docker smoke test | Local daemon unavailable; CI Docker job passed on Mode A commit `dd0c9ff`, including generated-code execution |
+| Docker smoke test | Local daemon unavailable; CI Docker job passed on scenario commit `48b8172`, including generated-code execution |
 | API endpoints | Not implemented or verified |
 
 Commands used locally:
@@ -37,6 +37,8 @@ The Mode A commit's `tests` and `docker-sandbox` jobs both passed in
 [GitHub Actions run 38561760377](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38561760377).
 The Mode B commit's `tests` and `docker-sandbox` jobs both passed in
 [GitHub Actions run 38562371569](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38562371569).
+The 25-scenario commit's `tests` and `docker-sandbox` jobs both passed in
+[GitHub Actions run 38563468591](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38563468591).
 
 ## Hardware and production gaps
 
