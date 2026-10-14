@@ -1,6 +1,7 @@
 """Load public scenarios only; evaluation labels have a separate loader."""
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import json
 from pathlib import Path
 from typing import Any
@@ -43,7 +44,10 @@ def load_scenarios(path: str | Path = DEFAULT_SCENARIOS) -> dict[str, Scenario]:
                     or scenario_id in scenarios or not isinstance(incident, dict)
                     or incident.get("id") != scenario_id
                     or not all(isinstance(incident.get(key), str) and incident[key]
-                               for key in ("server_id", "service", "summary"))
+                               for key in ("server_id", "service", "summary", "severity"))
+                    or not isinstance(incident.get("alert_at_minute", 0), int)
+                    or isinstance(incident.get("alert_at_minute", 0), bool)
+                    or incident.get("alert_at_minute", 0) < 0
                     or not isinstance(events, list) or not events
                     or not isinstance(allowed_tools, list)
                     or any(not isinstance(tool, str) or tool not in PUBLIC_TOOL_NAMES
@@ -51,20 +55,36 @@ def load_scenarios(path: str | Path = DEFAULT_SCENARIOS) -> dict[str, Scenario]:
                     or "get_incident_record" not in allowed_tools):
                 raise ValueError("invalid scenario identity or incident")
             previous = -1
+            started_at = None
             for event in events:
                 if (not isinstance(event, dict)
                         or not isinstance(event.get("minute"), int)
                         or isinstance(event["minute"], bool)
                         or event["minute"] <= previous
                         or not isinstance(event.get("metrics"), (dict, type(None)))
+                        or not isinstance(event.get("timestamp"), str)
                         or not isinstance(event.get("logs"), list)
                         or any(not isinstance(log, dict)
                                or not all(isinstance(log.get(key), str)
-                                          for key in ("severity", "message"))
+                                          for key in ("timestamp", "severity", "message"))
                                for log in event["logs"])
-                        or event.get("status") not in {"open", "degraded", "resolved", "healthy"}
+                        or event.get("status") not in {
+                            "open", "degraded", "recovering", "resolved", "healthy"}
                         or not isinstance(event.get("faults", []), list)):
                     raise ValueError("invalid event timeline")
+                try:
+                    observed_at = datetime.fromisoformat(event["timestamp"].replace("Z", "+00:00"))
+                except ValueError as exc:
+                    raise ValueError("invalid event timestamp") from exc
+                if observed_at.tzinfo is None or observed_at.utcoffset() != timedelta(0):
+                    raise ValueError("event timestamp must be UTC")
+                if started_at is None:
+                    started_at = observed_at
+                if (observed_at != started_at + timedelta(minutes=event["minute"])
+                        or event["metrics"] is not None
+                        and event["metrics"].get("timestamp") != event["timestamp"]
+                        or any(log["timestamp"] != event["timestamp"] for log in event["logs"])):
+                    raise ValueError("event timestamps must match virtual minutes")
                 previous = event["minute"]
             if events[0]["minute"] != 0:
                 raise ValueError("timeline must start at minute zero")

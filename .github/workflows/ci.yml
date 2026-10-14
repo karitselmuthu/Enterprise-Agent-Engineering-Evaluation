@@ -15,6 +15,7 @@ jobs:
       - run: python scripts/run_evaluation.py
       - run: python -m scripts.run_simulation
       - run: python -m scripts.audit_data
+      - run: python -m scripts.validate_mode_a
   docker-sandbox:
     runs-on: ubuntu-latest
     steps:

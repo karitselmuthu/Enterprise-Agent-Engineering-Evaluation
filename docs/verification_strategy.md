@@ -15,6 +15,7 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 python3 scripts/run_evaluation.py
 python3 -m scripts.run_simulation
 python3 -m scripts.audit_data
+python3 -m scripts.validate_mode_a
 ```
 
 CI runs both commands on Python 3.12 and runs the Docker sandbox integration

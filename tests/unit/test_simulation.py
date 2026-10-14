@@ -17,8 +17,11 @@ class SimulationUnitTests(unittest.TestCase):
 
     def test_twenty_distinct_scenarios_and_timeline(self):
         self.assertEqual(len(self.scenarios), 20)
+        self.assertEqual([event["minute"] for event in self.scenarios["SIM-004"].events],
+                         list(range(0, 40, 5)))
         self.assertTrue(all([event["minute"] for event in item.events] == [0, 5, 10, 15]
-                            for item in self.scenarios.values()))
+                            for identifier, item in self.scenarios.items()
+                            if identifier != "SIM-004"))
 
     def test_committed_fixtures_match_deterministic_generator(self):
         public, labels = build_records()
@@ -38,13 +41,24 @@ class SimulationUnitTests(unittest.TestCase):
 
     def test_future_observations_are_invisible_until_clock_advances(self):
         engine = ReplayEngine(self.scenarios["SIM-004"])
+        with self.assertRaisesRegex(KeyError, "not yet raised"):
+            engine.incident("SIM-004")
         self.assertEqual(len(engine.metrics("prod-app-004")["samples"]), 1)
         self.assertFalse(any("exhausted" in entry["message"]
                              for entry in engine.logs("payment-service")["entries"]))
-        engine.clock.seek(10)
-        self.assertEqual(len(engine.metrics("prod-app-004")["samples"]), 3)
+        engine.clock.seek(20)
+        self.assertEqual(len(engine.metrics("prod-app-004")["samples"]), 5)
         self.assertTrue(any("exhausted" in entry["message"]
                             for entry in engine.logs("payment-service")["entries"]))
+
+    def test_inconsistent_absolute_timestamp_is_rejected(self):
+        public, _ = build_records()
+        public[0]["events"][1]["timestamp"] = "2026-10-14T11:05:00Z"
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "bad_time.jsonl"
+            path.write_text(json.dumps(public[0]) + "\n")
+            with self.assertRaisesRegex(ValueError, "timestamps must match"):
+                load_scenarios(path)
 
     def test_public_dataset_rejects_hidden_labels(self):
         public = {"scenario_id": "x", "incident": {"id": "x", "server_id": "s",

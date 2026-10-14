@@ -1,6 +1,7 @@
 """Replay one scenario and expose only time-bounded observations."""
 
 from copy import deepcopy
+from datetime import datetime, timedelta
 
 from .clock import VirtualClock
 from .scenario_loader import Scenario
@@ -15,12 +16,19 @@ class ReplayEngine:
         return tuple(event for event in self.scenario.events
                      if event["minute"] <= self.clock.minute)
 
+    def observed_at(self) -> str:
+        start = datetime.fromisoformat(self.scenario.events[0]["timestamp"].replace("Z", "+00:00"))
+        return (start + timedelta(minutes=self.clock.minute)).isoformat().replace("+00:00", "Z")
+
     def incident(self, incident_id: str) -> dict:
         if incident_id != self.scenario.scenario_id:
             raise KeyError(f"Unknown incident: {incident_id}")
+        if self.clock.minute < self.scenario.incident.get("alert_at_minute", 0):
+            raise KeyError(f"Incident not yet raised: {incident_id}")
         latest = self.visible_events()[-1]
         return deepcopy({**self.scenario.incident, "status": latest["status"],
-                         "observed_minute": self.clock.minute})
+                         "observed_minute": self.clock.minute,
+                         "observed_at": self.observed_at()})
 
     def metrics(self, server_id: str) -> dict:
         if server_id != self.scenario.incident["server_id"]:
@@ -29,6 +37,7 @@ class ReplayEngine:
         samples = [{"minute": event["minute"], **event["metrics"]}
                    for event in self.visible_events() if event["metrics"] is not None]
         return deepcopy({"server_id": server_id, "observed_minute": self.clock.minute,
+                         "observed_at": self.observed_at(),
                          "status": "available" if samples else "missing", "samples": samples})
 
     def logs(self, service: str) -> dict:
@@ -39,6 +48,7 @@ class ReplayEngine:
                     "server_id": self.scenario.incident["server_id"], **log}
                    for event in self.visible_events() for log in event["logs"]]
         return deepcopy({"service": service, "observed_minute": self.clock.minute,
+                         "observed_at": self.observed_at(),
                          "entries": entries})
 
     def _check_fault(self, tool: str) -> None:

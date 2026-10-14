@@ -25,8 +25,8 @@
   deterministic and small, so its pass rate is not a production estimate.
 - The proposed HTTP API and metrics endpoint are not implemented yet. See the
   verification strategy for their future acceptance checks.
-- The 20-scenario replay dataset is synthetic and has four timestamps per
-  scenario. Its label separation is an architectural boundary, not a process
+- The 20-scenario replay dataset is synthetic. Most cases have four timestamps;
+  the payment case has eight. Its label separation is an architectural boundary, not a process
   isolation boundary. The baseline investigator reports observations but does
   not reliably identify root causes; the literal phrase metric is not a
   semantic accuracy measure.

@@ -22,13 +22,15 @@ class SimulationInvestigator:
         if metrics.ok and metrics.content["samples"]:
             sample = metrics.content["samples"][-1]
             values = ", ".join(f"{key}={value}" for key, value in sample.items()
-                               if key != "minute")
-            evidence.append(f"metrics at minute {sample['minute']}: {values}")
+                               if key not in {"minute", "timestamp"})
+            evidence.append(f"metrics at {sample['timestamp']}: {values}")
+        latest_log = None
         if logs.ok:
-            errors = [entry for entry in logs.content["entries"]
-                      if entry["severity"] in {"ERROR", "WARN"}]
-            if errors:
-                evidence.append(f"latest log: {errors[-1]['message']}")
+            entries = logs.content["entries"]
+            latest_log = entries[-1] if entries else None
+            if latest_log and (latest_log["severity"] in {"ERROR", "WARN"}
+                               or info["status"] in {"recovering", "resolved"}):
+                evidence.append(f"latest log: {latest_log['message']}")
         if info["status"] == "healthy":
             state.answer = (f"No active incident for {incident_id}; current observations "
                             "show healthy service status.")
@@ -36,10 +38,23 @@ class SimulationInvestigator:
             state.answer = f"Insufficient evidence for {incident_id}; verify monitoring and logs."
         else:
             state.answer = (f"Incident {incident_id} ({info['status']}): "
-                            + "; ".join(evidence) + ". Investigate the observed symptoms.")
+                            + "; ".join(evidence) + ". "
+                            + self._recommendation(info["status"], latest_log))
         if not metrics.ok or not logs.ok:
             state.answer += " Some observations were unavailable."
         return state
+
+    @staticmethod
+    def _recommendation(status: str, latest_log: dict | None) -> str:
+        if status == "resolved":
+            return "Confirm sustained recovery and monitor request errors."
+        if status == "recovering":
+            return "Monitor recovery and verify that request failures continue to fall."
+        if latest_log and latest_log["severity"] == "ERROR":
+            return "Escalate active failures and inspect the failing dependency."
+        if latest_log and latest_log["severity"] == "WARN":
+            return "Check the warning trend and gather more evidence before changes."
+        return "Investigate the observed symptoms."
 
     def _call(self, state: AgentState, name: str, arguments: dict[str, str]) -> ToolResult:
         state.trace.append({"stage": "selection", "tool": name, "arguments": arguments})

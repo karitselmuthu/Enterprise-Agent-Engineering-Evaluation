@@ -27,7 +27,8 @@ agent receives a `ToolExecutor` with three read-only contracts:
 | `get_server_metrics` | `server_id` | Available metric samples through current virtual minute |
 | `get_application_logs` | `service` | Log entries through current virtual minute |
 
-Each scenario has observations at minutes 0, 5, 10, and 15. The virtual clock
+Most scenarios have observations at minutes 0, 5, 10, and 15. `SIM-004` has
+eight observations from 10:00 through 10:35 UTC at five-minute intervals. The virtual clock
 can seek or advance without waiting for wall time. It prevents future metric
 and log events from appearing in tool responses. Scenarios include CPU and
 memory pressure, database and network faults, deployment regression, missing
@@ -41,6 +42,7 @@ Run from the repository root:
 ```sh
 python3 -m simulation.event_generator
 python3 -m scripts.run_simulation
+python3 -m scripts.validate_mode_a
 python3 -m unittest tests.unit.test_simulation tests.integration.test_simulation_agent -v
 ```
 
@@ -56,6 +58,12 @@ expected tool names were selected; 58 of 60 calls succeeded. One metric call
 timed out and one was denied by policy. The exact root-cause label appeared in
 zero answers, which establishes the baseline's current diagnosis gap rather
 than an accuracy estimate.
+
+The Mode A acceptance check replays `SIM-004` at virtual minutes 15, 25, and
+35. It verifies that later events remain hidden, evidence and advice change as
+the incident develops, and the final status is resolved. `--minute 15` (or
+`25` or `35`) prints a single observation and agent answer. The fixed replay
+does not wait for real time; live polling remains a later mode.
 
 The file separation is an architectural data boundary, not a security sandbox.
 A future untrusted agent needs process or service isolation so it cannot read

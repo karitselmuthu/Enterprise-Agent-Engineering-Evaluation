@@ -84,3 +84,32 @@ not replace the small deterministic unit-test fixtures.
 The [data volume audit](docs/data_volume_audit.md) verifies the current five
 dataset categories against the suggested initial sizes. None of those volume
 targets has been reached; run `python3 -m scripts.audit_data` for current counts.
+
+### Mode A replay validation
+
+From the repository root, inspect the payment incident at three virtual times.
+These commands wait for no wall-clock time and use only synthetic data:
+
+```sh
+python3 -m scripts.validate_mode_a --minute 15
+python3 -m scripts.validate_mode_a --minute 25
+python3 -m scripts.validate_mode_a --minute 35
+```
+
+At 10:15 UTC, expect CPU 82%, memory 73%, a connection warning, and advice to
+gather evidence. At 10:25 UTC, expect CPU 97%, memory 89%, failed requests,
+and escalation advice. At 10:35 UTC, expect a resolved status and recovery
+monitoring advice. Each command prints the visible observations, selected
+tools, and agent answer.
+
+Run the automated acceptance check:
+
+```sh
+python3 -m scripts.validate_mode_a
+python3 -m unittest tests.integration.test_mode_a_validation -v
+```
+
+The check exits nonzero on failure and writes
+`reports/scenario_results/mode_a_validation.json`. It verifies event order,
+future-event hiding, changing evidence and advice, recovery, and repeatability.
+See [simulation details](docs/simulation.md) for the agent/data boundary.

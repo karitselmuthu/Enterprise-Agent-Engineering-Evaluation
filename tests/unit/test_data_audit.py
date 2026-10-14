@@ -11,12 +11,12 @@ class DataAuditTests(unittest.TestCase):
         self.assertEqual(result["infrastructure_inventory"]["records"], 0)
         self.assertEqual(result["infrastructure_inventory"][
             "distinct_server_ids_embedded_in_scenarios"], 20)
-        self.assertEqual(result["infrastructure_metrics"]["records"], 76)
-        self.assertFalse(result["infrastructure_metrics"]["absolute_timestamp_present"])
-        self.assertEqual(result["application_logs"]["records"], 78)
-        self.assertFalse(result["application_logs"]["absolute_timestamp_present"])
+        self.assertEqual(result["infrastructure_metrics"]["records"], 80)
+        self.assertTrue(result["infrastructure_metrics"]["absolute_timestamp_present"])
+        self.assertEqual(result["application_logs"]["records"], 82)
+        self.assertTrue(result["application_logs"]["absolute_timestamp_present"])
         self.assertEqual(result["incident_records"]["simulated_alerts"], 20)
-        self.assertFalse(result["incident_records"]["severity_present"])
+        self.assertTrue(result["incident_records"]["severity_present"])
         self.assertEqual(result["knowledge_base_documents"]["records"], 5)
         self.assertTrue(all(not category["volume_target_met"]
                             for category in result.values()))

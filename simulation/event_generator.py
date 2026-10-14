@@ -1,6 +1,7 @@
 """Offline fixture generator. Runtime replay never imports this module."""
 
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -51,6 +52,38 @@ SERVICES = (
     "recommendation-api", "order-queue", "customer-portal",
 )
 
+REPLAY_START = datetime(2026, 10, 14, 10, 0, tzinfo=timezone.utc)
+
+# The detailed payment timeline is a fixed validation case for evidence changes.
+PAYMENT_TIMELINE = (
+    (0, 35, 48, "Normal service operation", "INFO", "healthy"),
+    (5, 42, 52, "Normal service operation", "INFO", "healthy"),
+    (10, 65, 61, "Request latency increasing", "WARN", "degraded"),
+    (15, 82, 73, "Database connection warnings near pool limit", "WARN", "degraded"),
+    (20, 94, 85, "Database connection pool exhausted", "ERROR", "degraded"),
+    (25, 97, 89, "Requests failing after database pool exhaustion", "ERROR", "degraded"),
+    (30, 76, 82, "Recovery begins; request failures decreasing", "INFO", "recovering"),
+    (35, 43, 59, "Service recovered; request latency normal", "INFO", "resolved"),
+)
+
+
+def _timestamp(minute: int) -> str:
+    return (REPLAY_START + timedelta(minutes=minute)).isoformat().replace("+00:00", "Z")
+
+
+def _payment_events() -> list[dict]:
+    events = []
+    for minute, cpu, memory, message, severity, status in PAYMENT_TIMELINE:
+        timestamp = _timestamp(minute)
+        events.append({"minute": minute, "timestamp": timestamp,
+                       "metrics": {"cpu_percent": cpu, "memory_percent": memory,
+                                   "disk_percent": 45, "network_latency_ms": 20 + max(0, cpu - 35) * 3,
+                                   "timestamp": timestamp},
+                       "logs": [{"timestamp": timestamp, "severity": severity,
+                                 "message": message}],
+                       "status": status, "faults": []})
+    return events
+
 
 def build_records() -> tuple[list[dict], list[dict]]:
     public, truth = [], []
@@ -59,10 +92,13 @@ def build_records() -> tuple[list[dict], list[dict]]:
         server_id = f"prod-app-{index:03d}"
         events = []
         for offset, minute in enumerate((0, 5, 10, 15)):
+            timestamp = _timestamp(minute)
             reading = PROFILES[profile][offset]
             metrics = (None if reading is None else dict(zip(
                 ("cpu_percent", "memory_percent", "disk_percent", "network_latency_ms"),
                 reading)))
+            if metrics is not None:
+                metrics["timestamp"] = timestamp
             if offset == 0:
                 message, severity = "Routine baseline observation", "INFO"
             elif offset == 1:
@@ -72,20 +108,25 @@ def build_records() -> tuple[list[dict], list[dict]]:
             else:
                 message, severity = ("Service recovered" if behavior == "recovery" else error), (
                     "INFO" if behavior in {"recovery", "healthy"} else "ERROR")
-            logs = [{"severity": severity, "message": message}]
+            logs = [{"timestamp": timestamp, "severity": severity, "message": message}]
             if behavior == "repeat" and minute >= 10:
-                logs.append({"severity": "WARN", "message": warning})
+                logs.append({"timestamp": timestamp, "severity": "WARN", "message": warning})
             if behavior == "missing":
                 logs = []
             status = ("healthy" if behavior == "healthy" else
                       "resolved" if behavior == "recovery" and minute == 15 else
                       "open" if minute == 0 else "degraded")
-            events.append({"minute": minute, "metrics": metrics, "logs": logs,
+            events.append({"minute": minute, "timestamp": timestamp,
+                           "metrics": metrics, "logs": logs,
                            "status": status,
                            "faults": ["get_server_metrics"] if behavior == "timeout" and minute == 10 else []})
+        if scenario_id == "SIM-004":
+            events = _payment_events()
         public.append({"scenario_id": scenario_id,
                        "incident": {"id": scenario_id, "server_id": server_id,
-                                    "service": service, "summary": summary},
+                                    "service": service, "summary": summary,
+                                    "severity": "P3" if behavior == "healthy" else "P2",
+                                    "alert_at_minute": 10 if scenario_id == "SIM-004" else 0},
                        "allowed_tools": (["get_incident_record", "get_application_logs"]
                                          if behavior == "permission" else
                                          ["get_incident_record", "get_server_metrics",
