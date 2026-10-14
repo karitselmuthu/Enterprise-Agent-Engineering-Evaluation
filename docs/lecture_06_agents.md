@@ -23,3 +23,14 @@ arguments and reports server tool errors.
 
 Run `.venv/bin/python experiments/lecture_06/02_mcp.py` to exercise a real
 stdio server subprocess. The in-memory MCP connection is used in tests.
+
+## 6.3 Agent memory
+
+`ShortTermMemory` keeps bounded conversation turns, the current task, and
+recent tool results. `LongTermMemory` stores investigations, notes, approved
+facts, and tool results in SQLite. A new `StatefulIncidentAgent` instance can
+resume an existing session and use its previous incident ID for follow-ups.
+Only explicitly approved facts are added to a new answer.
+The same store also wraps the MCP agent through `StatefulMCPIncidentAgent`.
+
+Run `PYTHONPATH=. python3 experiments/lecture_06/03_memory.py`.

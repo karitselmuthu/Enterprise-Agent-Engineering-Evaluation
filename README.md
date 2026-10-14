@@ -44,3 +44,6 @@ See [Lecture 06](docs/lecture_06_agents.md) for phase details.
 
 Phase 6.2 adds an MCP server and a permission-aware MCP client. Install the
 project with `python3 -m pip install -e .` before running the MCP experiment.
+
+Phase 6.3 adds SQLite-backed investigation memory. The memory experiment
+shows a session resuming after the agent is reconstructed.
