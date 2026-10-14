@@ -27,7 +27,16 @@ class MCPIncidentAgent:
             visible = [tool.model_dump(by_alias=True, exclude_none=True)
                        for name, tool in discovered.items() if name in self.allowed]
             state.trace.append({"stage": "discovery", "tools": sorted(discovered)})
-            choice = self.backend.select_tool(request, visible)
+            try:
+                choice = self.backend.select_tool(request, visible)
+            except Exception as exc:
+                result = ToolResult("selector", False, error=str(exc),
+                                    error_code="selection_failed")
+                state.tool_results.append(result)
+                state.answer = f"Investigation failed: {exc}"
+                state.trace.append({"stage": "selection", "ok": False,
+                                    "error_code": result.error_code})
+                return state
             if choice is None:
                 state.answer = "No suitable tool selected."
                 return state
@@ -47,6 +56,11 @@ class MCPIncidentAgent:
             state.tool_results.append(result)
             state.trace.append({"stage": "execution", "tool": name, "ok": result.ok,
                                 "error_code": result.error_code})
-            state.answer = self.backend.interpret(request, result)
+            try:
+                state.answer = self.backend.interpret(request, result)
+            except Exception as exc:
+                state.answer = f"Interpretation failed: {exc}"
+                state.tool_results[-1] = ToolResult(
+                    name, False, error=str(exc), error_code="interpretation_failed")
             state.trace.append({"stage": "interpretation", "answer": state.answer})
             return state

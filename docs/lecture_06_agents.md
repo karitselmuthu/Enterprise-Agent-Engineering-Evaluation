@@ -71,3 +71,16 @@ a local model for source generation through the same validation and sandbox.
 Prepare with `docker pull python:3.12-alpine`, then run
 `PYTHONPATH=. .venv/bin/python experiments/lecture_06/06_coding_agent.py`.
 CI runs the real Docker integration test.
+
+## 6.7 Skills
+
+Each `skill.json` declares its purpose, named string inputs, permitted MCP
+tools, execution instructions, output format, and error behavior. The loader
+discovers skill directories; the runner validates inputs and intersects skill
+permissions with host policy before invoking the MCP agent. The incident
+analysis and service health manifests demonstrate reusable capabilities.
+To add a skill, create a child directory under `src/skills/` with a
+`skill.json` following either example, then allow its tools in the host
+policy passed to `SkillRunner`.
+
+Run `PYTHONPATH=. .venv/bin/python experiments/lecture_06/07_skills.py`.

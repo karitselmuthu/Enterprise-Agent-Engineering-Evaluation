@@ -10,6 +10,8 @@ flowchart LR
     Agent --> Retrieval[TF-IDF runbook retrieval]
     Memory --> Compaction[Context budget and compaction]
     Compaction --> Agent
+    Agent --> Skills[Skill registry and host tool policy]
+    Skills --> MCPClient
     Retrieval --> Runbooks[Markdown runbooks]
     Agent --> Memory[Short-term state]
     Memory --> SQLite[SQLite investigation store]
@@ -21,6 +23,10 @@ allowed names. `StatefulMCPIncidentAgent` adds SQLite-backed resume, and
 `RetrievalIncidentAgent` adds runbook sections before the answer is persisted.
 The default selector is deterministic for offline experiments; the optional
 Ollama backend uses a locally running model.
+
+The phase 6.6 coding agent runs generated scripts only through a constrained
+Docker container. Phase 6.7 skill manifests compose the MCP client with a
+per-skill tool list and a separate host permission policy.
 
 Each phase has an experiment in `experiments/lecture_06/` and focused tests
 under `tests/`.

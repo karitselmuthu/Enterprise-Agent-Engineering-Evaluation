@@ -1,0 +1,9 @@
+{
+  "name": "incident_analysis",
+  "purpose": "Investigate a known IT incident and summarize its impact and next action.",
+  "input_requirements": {"incident_id": "string"},
+  "permitted_tools": ["incident_record"],
+  "execution_instructions": "Investigate ${incident_id}",
+  "output_format": "json",
+  "error_handling": "return_error"
+}

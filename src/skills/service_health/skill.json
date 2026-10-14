@@ -1,0 +1,9 @@
+{
+  "name": "service_health",
+  "purpose": "Check the health of a named infrastructure service.",
+  "input_requirements": {"service": "string"},
+  "permitted_tools": ["service_status"],
+  "execution_instructions": "Check health of service ${service}",
+  "output_format": "text",
+  "error_handling": "raise"
+}

@@ -56,3 +56,6 @@ preserved approved facts for long-running investigations.
 
 Phase 6.6 adds a controlled coding-agent experiment that generates and tests a
 Python log analyzer inside a resource-limited Docker container.
+
+Phase 6.7 adds discoverable, permission-scoped skill manifests for incident
+analysis and service health.

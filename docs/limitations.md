@@ -17,3 +17,6 @@
 - Coding-agent static checks reduce mistakes but are not an isolation
   boundary. Docker is required; the agent refuses execution if its daemon or
   local Python image is unavailable. The Docker integration test runs in CI.
+- Skill manifests support string inputs and text or JSON outputs. Skill authors
+  must be trusted to write instructions, and new MCP tools still require an
+  explicit host policy grant.
