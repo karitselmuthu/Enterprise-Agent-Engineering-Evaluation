@@ -33,7 +33,7 @@ resume an existing session and use its previous incident ID for follow-ups.
 Only explicitly approved facts are added to a new answer.
 The same store also wraps the MCP agent through `StatefulMCPIncidentAgent`.
 
-Run `PYTHONPATH=. python3 experiments/lecture_06/03_memory.py`.
+Run `PYTHONPATH=. .venv/bin/python experiments/lecture_06/03_memory.py`.
 
 ## 6.4 Retrieval
 

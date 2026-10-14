@@ -1,0 +1,13 @@
+# Current limitations
+
+- The default tool selector is deterministic. The Ollama adapter has mocked
+  protocol tests, but no live-model quality evaluation yet.
+- The phase 6.1 thread timeout reports a timeout but cannot stop a running
+  Python handler. Only trusted read-only handlers are registered.
+- MCP tools currently read local fixtures over stdio. There is no remote
+  authentication, production infrastructure adapter, or server deployment.
+- SQLite memory is local to one machine. An approved fact is trusted because
+  the caller marks it approved; there is no reviewer workflow.
+- The five runbooks are teaching fixtures. TF-IDF matches words, so it may
+  miss synonyms or rank incidental word overlap. Retrieved text should be
+  checked against live incident evidence before operational changes.

@@ -1,0 +1,24 @@
+# Architecture through phase 6.4
+
+```mermaid
+flowchart LR
+    Request --> Agent
+    Agent --> Selector[Mock or Ollama selector]
+    Selector --> MCPClient[MCP client and allowlist]
+    MCPClient --> MCPServer[MCP stdio server]
+    MCPServer --> Fixtures[Read-only incident fixtures]
+    Agent --> Retrieval[TF-IDF runbook retrieval]
+    Retrieval --> Runbooks[Markdown runbooks]
+    Agent --> Memory[Short-term state]
+    Memory --> SQLite[SQLite investigation store]
+```
+
+The local incident agent in `src/agents/runtime.py` exercises tool calling
+without MCP. `MCPIncidentAgent` discovers server tools and invokes only
+allowed names. `StatefulMCPIncidentAgent` adds SQLite-backed resume, and
+`RetrievalIncidentAgent` adds runbook sections before the answer is persisted.
+The default selector is deterministic for offline experiments; the optional
+Ollama backend uses a locally running model.
+
+Each phase has an experiment in `experiments/lecture_06/` and focused tests
+under `tests/`.
