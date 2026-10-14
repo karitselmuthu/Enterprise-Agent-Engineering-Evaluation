@@ -27,9 +27,8 @@ Commands used locally:
 .venv/bin/python -m scripts.run_simulation
 ```
 
-The previous verification commit's `tests` and `docker-sandbox` jobs both
-passed in [GitHub Actions run 38557858492](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38557858492).
-The simulation milestone's CI result will be recorded after its push.
+The simulation milestone's `tests` and `docker-sandbox` jobs both passed in
+[GitHub Actions run 38559000896](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38559000896).
 
 ## Hardware and production gaps
 
