@@ -20,3 +20,8 @@
 - Skill manifests support string inputs and text or JSON outputs. Skill authors
   must be trusted to write instructions, and new MCP tools still require an
   explicit host policy grant.
+- Lecture 7 judge protocols are covered with injected responses, but no live
+  local or hosted model quality results are available. The mock benchmark is
+  deterministic and small, so its pass rate is not a production estimate.
+- The proposed HTTP API and metrics endpoint are not implemented yet. See the
+  verification strategy for their future acceptance checks.

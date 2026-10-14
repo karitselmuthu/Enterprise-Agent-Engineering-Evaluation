@@ -67,3 +67,8 @@ See [Lecture 07](docs/lecture_07_evaluation.md).
 Lecture 7 also includes deterministic answer metrics, judge bias probes, agent
 trajectory evaluation, and an offline benchmark. Run
 `python3 scripts/run_evaluation.py` to produce a reproducible report.
+
+The [verification strategy](docs/verification_strategy.md) defines test and
+evidence requirements, including a proposed API contract. The API routes are
+not implemented yet. A dated [verification snapshot](reports/verification_2026-10-14.md)
+records current results and gaps.
