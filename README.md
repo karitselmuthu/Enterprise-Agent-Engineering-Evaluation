@@ -53,3 +53,6 @@ adds cited runbook guidance to MCP incident investigations.
 
 Phase 6.5 adds a configurable context budget with conversation compaction and
 preserved approved facts for long-running investigations.
+
+Phase 6.6 adds a controlled coding-agent experiment that generates and tests a
+Python log analyzer inside a resource-limited Docker container.

@@ -14,3 +14,6 @@
 - Context token counts are model-agnostic estimates. A provider-specific
   tokenizer is needed before treating the configured budget as a hard model
   context-window guarantee.
+- Coding-agent static checks reduce mistakes but are not an isolation
+  boundary. Docker is required; the agent refuses execution if its daemon or
+  local Python image is unavailable. The Docker integration test runs in CI.

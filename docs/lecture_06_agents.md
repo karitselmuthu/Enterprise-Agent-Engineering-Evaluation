@@ -56,3 +56,18 @@ an overlong critical section raises `ContextBudgetExceeded`. The integrated
 then retrieves runbook guidance.
 
 Run `PYTHONPATH=. .venv/bin/python experiments/lecture_06/05_context_compaction.py`.
+
+## 6.6 Coding agents
+
+`LogAnalysisCodeAgent` generates a Python log analyzer, statically checks its
+AST, executes it against supplied logs inside a Docker container, and runs a
+second known-result fixture in another container. The sandbox has no network,
+a read-only root, a read-only script mount, a non-root user, dropped
+capabilities, CPU, memory, PID, time, input, and output limits. The image must
+already exist locally; the agent fails closed if Docker is unavailable.
+The default generator is a deterministic template; set `OLLAMA_MODEL` to use
+a local model for source generation through the same validation and sandbox.
+
+Prepare with `docker pull python:3.12-alpine`, then run
+`PYTHONPATH=. .venv/bin/python experiments/lecture_06/06_coding_agent.py`.
+CI runs the real Docker integration test.
