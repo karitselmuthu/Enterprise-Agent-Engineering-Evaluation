@@ -35,6 +35,8 @@ Commands used locally:
 
 The Mode A commit's `tests` and `docker-sandbox` jobs both passed in
 [GitHub Actions run 38561760377](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38561760377).
+The Mode B commit's `tests` and `docker-sandbox` jobs both passed in
+[GitHub Actions run 38562371569](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38562371569).
 
 ## Hardware and production gaps
 
