@@ -14,7 +14,7 @@ the project is not yet declared complete.
 | MCP integration | Discovery and structured call tests pass; missing incident, invalid argument, denied tool, and unknown tool cases pass |
 | Retrieval | Five fixed queries ranked their expected runbook first: top-1 accuracy 5/5 on teaching fixtures |
 | Evaluation | Three-case mock benchmark passed; mean answer-term recall 1.0. Dataset → injected judge → report integration passed; invalid judge output rejected. Local model judge score: not verified |
-| Docker smoke test | Local daemon unavailable; CI Docker job passed on the previous pushed commit, including generated-code execution |
+| Docker smoke test | Local daemon unavailable; CI Docker job passed on verification commit `77e5644`, including generated-code execution |
 | API endpoints | Not implemented or verified |
 
 Commands used locally:
@@ -25,10 +25,8 @@ Commands used locally:
 .venv/bin/python scripts/run_agent.py INC-001
 ```
 
-The CI evidence for the previous pushed commit is
-[GitHub Actions run 38557138345](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38557138345).
-The new integration test in this snapshot must be checked again in CI after
-this report is pushed.
+The verification commit's `tests` and `docker-sandbox` jobs both passed in
+[GitHub Actions run 38557858492](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38557858492).
 
 ## Hardware and production gaps
 
