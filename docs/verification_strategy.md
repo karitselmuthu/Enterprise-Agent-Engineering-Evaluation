@@ -14,6 +14,7 @@ Run the baseline checks from the repository root:
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 python3 scripts/run_evaluation.py
 python3 -m scripts.run_simulation
+python3 -m scripts.audit_data
 ```
 
 CI runs both commands on Python 3.12 and runs the Docker sandbox integration

@@ -80,3 +80,7 @@ a virtual clock, and three read-only infrastructure tools. Public observations
 and private evaluation labels are stored separately. Run
 `python3 -m scripts.run_simulation` for a baseline scenario report. This does
 not replace the small deterministic unit-test fixtures.
+
+The [data volume audit](docs/data_volume_audit.md) verifies the current five
+dataset categories against the suggested initial sizes. None of those volume
+targets has been reached; run `python3 -m scripts.audit_data` for current counts.

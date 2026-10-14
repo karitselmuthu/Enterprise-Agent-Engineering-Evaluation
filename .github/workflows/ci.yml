@@ -14,6 +14,7 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_*.py' -v
       - run: python scripts/run_evaluation.py
       - run: python -m scripts.run_simulation
+      - run: python -m scripts.audit_data
   docker-sandbox:
     runs-on: ubuntu-latest
     steps:
