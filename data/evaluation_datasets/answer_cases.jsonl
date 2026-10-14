@@ -1,0 +1,2 @@
+{"case_id":"incident-cause","question":"What caused INC-001?","reference":"Database connection pool exhaustion caused the incident.","required_terms":["connection pool","exhaustion"],"evidence":"Incident record: suspected cause is connection pool exhaustion."}
+{"case_id":"service-status","question":"What is the status of the payments service?","reference":"The payments service is degraded.","required_terms":["payments","degraded"],"evidence":"Service status: payments is degraded."}
