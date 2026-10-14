@@ -36,10 +36,21 @@ class ToolExecutor:
             return ToolResult(name, False, error=str(exc), error_code="permission_denied")
         except (ValueError, TypeError) as exc:
             return ToolResult(name, False, error=str(exc), error_code="invalid_arguments")
+        def invoke():
+            try:
+                return True, tool.handler(**arguments)
+            except Exception as exc:
+                return False, exc
+
         pool = ThreadPoolExecutor(max_workers=1)
-        future = pool.submit(tool.handler, **arguments)
+        future = pool.submit(invoke)
         try:
-            content = future.result(timeout=timeout_seconds)
+            ok, content = future.result(timeout=timeout_seconds)
+            if not ok:
+                return ToolResult(name, False, error=str(content),
+                                  error_code="timeout" if isinstance(content, TimeoutError)
+                                  else "execution_failed",
+                                  duration_ms=(monotonic() - started) * 1000)
             return ToolResult(name, True, content=content,
                               duration_ms=(monotonic() - started) * 1000)
         except FutureTimeout:

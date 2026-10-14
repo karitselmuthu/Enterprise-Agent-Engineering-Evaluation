@@ -1,4 +1,4 @@
-# Architecture through phase 6.4
+# Architecture through Lecture 7 and the simulation milestone
 
 ```mermaid
 flowchart LR
@@ -30,3 +30,8 @@ per-skill tool list and a separate host permission policy.
 
 Each phase has an experiment in `experiments/lecture_06/` and focused tests
 under `tests/`.
+
+The simulation milestone adds `simulation/` as a separate replay and tool
+adapter package. Its public event dataset feeds a baseline investigator
+through `ToolExecutor`; private labels are loaded only by the evaluation
+runner. See [Simulation](simulation.md) for the boundary and limitations.

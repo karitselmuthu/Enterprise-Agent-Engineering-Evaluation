@@ -11,4 +11,4 @@ readme = "README.md"
 dependencies = ["mcp>=2.3,<3"]
 
 [tool.setuptools.packages.find]
-include = ["src*"]
+include = ["src*", "simulation*"]

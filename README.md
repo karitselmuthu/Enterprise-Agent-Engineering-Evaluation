@@ -6,10 +6,10 @@
   Architecture	     Modular, tool-driven agent framework
   Primary language	 Python
   LLM backend	       Small local model or configurable external provider
-  API	               FastAPI
+  API	               Proposed; not implemented
   CLI	               Python CLI
-  Testing	           pytest
-  Deployment	       Docker
+  Testing	           unittest
+  Deployment	       Docker sandbox for generated code; service not deployed
   Development HW	   Apple Silicon Mac, 8 GB RAM
   Implementation 	   Incremental, experiment-driven
 # Enterprise problem statement
@@ -72,3 +72,11 @@ The [verification strategy](docs/verification_strategy.md) defines test and
 evidence requirements, including a proposed API contract. The API routes are
 not implemented yet. A dated [verification snapshot](reports/verification_2026-10-14.md)
 records current results and gaps.
+
+## Simulation milestone
+
+The [simulation layer](docs/simulation.md) adds 20 replayable incident scenarios,
+a virtual clock, and three read-only infrastructure tools. Public observations
+and private evaluation labels are stored separately. Run
+`python3 -m scripts.run_simulation` for a baseline scenario report. This does
+not replace the small deterministic unit-test fixtures.

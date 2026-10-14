@@ -13,6 +13,7 @@ Run the baseline checks from the repository root:
 ```sh
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 python3 scripts/run_evaluation.py
+python3 -m scripts.run_simulation
 ```
 
 CI runs both commands on Python 3.12 and runs the Docker sandbox integration
@@ -28,6 +29,7 @@ test in a separate job. The local Docker test is opt in with
 | Context and coding | Budget, static validation, sandbox command | Long session resume, Docker generated-code smoke test |
 | Skills | Manifest validation and policy | MCP skill invocation and tool errors |
 | Evaluation | Metrics, dataset validation, judge response validation, bias probes, benchmark gate | Dataset → injected judge → report, plus MCP and retrieval agent states scored through the evaluator, including invalid judge output and failed incident lookup |
+| Simulation | Virtual clock, public loader, fixture regeneration, future-event hiding, unknown resource | Twenty scenario runs through the standard tool executor, missing data, timeout, denied tool, and label separation |
 
 ## Proposed API verification contract
 
