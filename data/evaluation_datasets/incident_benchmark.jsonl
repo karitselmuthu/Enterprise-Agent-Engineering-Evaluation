@@ -1,0 +1,3 @@
+{"case_id":"incident-001","request":"Investigate INC-001","expected_calls":[{"name":"get_incident","arguments":{"incident_id":"INC-001"}}],"answer_terms":["database connection pool","slow queries"]}
+{"case_id":"api-status","request":"Check status of service api","expected_calls":[{"name":"get_service_status","arguments":{"service":"api"}}],"answer_terms":["api","degraded"]}
+{"case_id":"database-status","request":"Check health of service database","expected_calls":[{"name":"get_service_status","arguments":{"service":"database"}}],"answer_terms":["database","healthy"]}

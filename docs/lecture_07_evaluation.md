@@ -38,3 +38,18 @@ The agent evaluator scores selected tool and arguments, the complete selected
 trajectory, tool execution success, permission denials, and answer term recall.
 It operates on `AgentState`, including the fixture-backed incident agent and MCP
 agent. Run `python3 experiments/lecture_07/04_agent_evaluation.py`.
+
+## Phase 7.5: Benchmarks
+
+`incident_benchmark.jsonl` fixes three fixture-backed investigations. The
+runner records the dataset SHA-256, benchmark version, per-case outcomes, and
+aggregate scores in a stable JSON report. It exits nonzero if any case has an
+incorrect trajectory, failed tool call, missing required answer term, or
+permission denial. CI runs this benchmark with the default mock backend.
+
+```sh
+python3 scripts/run_evaluation.py
+```
+
+The default report is written to `reports/lecture_07/benchmark.json` (ignored
+by Git). Model-based judging is opt in and is not used to pass the CI gate.

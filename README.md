@@ -63,3 +63,7 @@ analysis and service health.
 Lecture 7 starts with an optional local Ollama judge for answer assessment.
 The mock backend remains the default for agent development and automated tests.
 See [Lecture 07](docs/lecture_07_evaluation.md).
+
+Lecture 7 also includes deterministic answer metrics, judge bias probes, agent
+trajectory evaluation, and an offline benchmark. Run
+`python3 scripts/run_evaluation.py` to produce a reproducible report.

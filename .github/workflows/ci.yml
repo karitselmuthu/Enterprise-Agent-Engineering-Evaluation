@@ -12,6 +12,7 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install -e .
       - run: python -m unittest discover -s tests -p 'test_*.py' -v
+      - run: python scripts/run_evaluation.py
   docker-sandbox:
     runs-on: ubuntu-latest
     steps:
