@@ -1,0 +1,7 @@
+{
+  "id": "INC-001",
+  "title": "Production API latency",
+  "impact": "Elevated request latency for customer traffic",
+  "suspected_cause": "Database connection pool saturation",
+  "recommended_action": "Inspect pool utilization and slow queries before changing capacity"
+}
