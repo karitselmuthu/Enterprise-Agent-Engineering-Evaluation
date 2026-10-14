@@ -31,3 +31,10 @@ after adding irrelevant length or a prompt-injection instruction. Run
 `python3 experiments/lecture_07/03_biases_pitfalls.py` for a **mock simulation**.
 Pass `--model YOUR_MODEL` for an actual local model. Position consistency and
 score sensitivity are diagnostics, not proof of fairness or reliability.
+
+## Phase 7.4: Agent evaluation
+
+The agent evaluator scores selected tool and arguments, the complete selected
+trajectory, tool execution success, permission denials, and answer term recall.
+It operates on `AgentState`, including the fixture-backed incident agent and MCP
+agent. Run `python3 experiments/lecture_07/04_agent_evaluation.py`.
