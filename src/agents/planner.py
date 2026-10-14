@@ -1,5 +1,10 @@
-"""Safe starter plan."""
-def plan(incident_id: str) -> list[tuple[str, dict[str, str]]]:
-    if not incident_id.strip():
-        raise ValueError("incident_id is required")
-    return [("get_incident", {"incident_id": incident_id})]
+"""Ask the configured backend to select a tool."""
+from src.llm.base import Backend
+from src.tools.registry import ToolRegistry
+
+def plan(request: str, backend: Backend,
+         registry: ToolRegistry) -> list[tuple[str, dict]]:
+    if not request.strip():
+        raise ValueError("request is required")
+    choice = backend.select_tool(request, registry.list_tools())
+    return [choice] if choice else []

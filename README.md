@@ -31,3 +31,13 @@
 # Example use case
   User request:
   "Investigate why the production application is experiencing high latency."
+
+## Implementation status
+
+Phase 6.1 provides a working tool-enabled incident agent with schema checks,
+permissions, execution traces, timeout reporting, and a local Ollama adapter.
+The default backend works offline with sample fixtures.
+
+Run `PYTHONPATH=. python3 scripts/run_agent.py INC-001` and
+`python3 -m unittest discover -s tests -p 'test_*.py' -v`.
+See [Lecture 06](docs/lecture_06_agents.md) for phase details.

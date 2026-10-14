@@ -16,9 +16,17 @@ def get_incident(incident_id: str) -> dict:
         raise ValueError("Incident fixture ID mismatch")
     return data
 
+def get_service_status(service: str) -> dict:
+    if service not in {"api", "database"}:
+        raise ValueError(f"Unknown service: {service}")
+    return {"service": service, "status": "degraded" if service == "api" else "healthy"}
+
 def infrastructure_registry() -> ToolRegistry:
     registry = ToolRegistry()
     registry.register(Tool("get_incident", "Read a local incident record by ID.",
         {"type": "object", "properties": {"incident_id": {"type": "string"}},
          "required": ["incident_id"], "additionalProperties": False}, get_incident))
+    registry.register(Tool("get_service_status", "Read the health of a named service.",
+        {"type": "object", "properties": {"service": {"type": "string"}},
+         "required": ["service"], "additionalProperties": False}, get_service_status))
     return registry

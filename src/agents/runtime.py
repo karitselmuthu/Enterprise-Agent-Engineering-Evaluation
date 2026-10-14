@@ -9,11 +9,22 @@ from .state import AgentState
 
 class IncidentAgent:
     def __init__(self, tools: ToolExecutor | None = None, backend: Backend | None = None):
-        self.tools = tools or ToolExecutor(infrastructure_registry(), frozenset({"get_incident"}))
+        self.tools = tools or ToolExecutor(
+            infrastructure_registry(), frozenset({"get_incident", "get_service_status"}))
         self.backend = backend or MockBackend()
 
-    def run(self, incident_id: str) -> AgentState:
-        state = execute(AgentState(incident_id), plan(incident_id), self.tools)
+    def run(self, request: str) -> AgentState:
+        state = AgentState(request)
+        steps = plan(request, self.backend, self.tools.registry)
+        state.trace.append({"stage": "selection", "tool": steps[0][0] if steps else None,
+                            "arguments": steps[0][1] if steps else {}})
+        if not steps:
+            state.answer = "No suitable tool selected."
+            return state
+        execute(state, steps, self.tools)
         result = state.tool_results[-1]
-        state.answer = self.backend.generate(result.content) if result.ok else f"Investigation failed: {result.error}"
+        state.trace.append({"stage": "execution", "tool": result.name, "ok": result.ok,
+                            "error_code": result.error_code, "duration_ms": result.duration_ms})
+        state.answer = self.backend.interpret(request, result)
+        state.trace.append({"stage": "interpretation", "answer": state.answer})
         return state
