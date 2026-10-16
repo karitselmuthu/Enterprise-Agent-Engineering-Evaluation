@@ -32,3 +32,6 @@ reports are its inputs. No live LLM was invoked, so model token use and
 model-driven quality remain unverified. The local Docker integration test was
 skipped; see the CI run for its separate Docker job. Other project gaps are in
 [limitations](../docs/limitations.md).
+
+Both the Python test job and Docker sandbox job passed for commit `360d0a5` in
+[GitHub Actions run 38984200779](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38984200779).
