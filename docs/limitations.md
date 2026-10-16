@@ -30,3 +30,7 @@
   isolation boundary. The baseline investigator reports observations but does
   not reliably identify root causes; the literal phrase metric is not a
   semantic accuracy measure.
+- Scenario cause and recommendation checks use deterministic text cues. They
+  are useful regression probes, not validated semantic judgments. The initial
+  10-concurrent and 50-sequential workload is local synthetic stress, not a
+  production capacity estimate.

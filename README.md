@@ -70,7 +70,7 @@ trajectory evaluation, and an offline benchmark. Run
 
 The [verification strategy](docs/verification_strategy.md) defines test and
 evidence requirements, including a proposed API contract. The API routes are
-not implemented yet. A dated [verification snapshot](reports/verification_2026-10-14.md)
+not implemented yet. A dated [verification snapshot](reports/verification_2026-10-16.md)
 records current results and gaps.
 
 ## Simulation milestone
@@ -148,3 +148,25 @@ short-lived intermediate states if its interval is too long; inspect the
 report's observed minutes to see which states each client actually sampled.
 The publisher paces deterministic synthetic events; it does not generate new
 random incidents or connect to production infrastructure.
+
+### Four-level agent validation
+
+The [verification strategy](docs/verification_strategy.md) separates unit,
+integration, full-scenario, and reliability testing. Run the scenario and
+initial load checks from the repository root:
+
+```sh
+python3 -m scripts.validate_scenarios
+python3 -m scripts.validate_reliability
+python3 -m unittest discover -s tests -p 'test_*.py' -v
+```
+
+The scenario report checks required tool names without enforcing one call
+order, confirms case-specific evidence in successful tool output, and records
+conservative cause and recommendation cues. The command fails if required
+tools or source evidence are missing. The current baseline passes those two
+foundation checks but has substantial diagnosis and recommendation gaps; the
+cue rates are not semantic accuracy scores. The reliability command covers 10
+simultaneous investigations, 50 sequential requests, repeatability, tool
+latency, MCP outage and recovery, malformed responses, and a process-bounded
+agent timeout. Reports are written under `reports/scenario_results/`.

@@ -70,6 +70,7 @@ Regenerate the deterministic files and inspect the evaluation report:
 ```sh
 python3 -m simulation.event_generator
 python3 -m scripts.run_simulation
+python3 -m scripts.validate_scenarios
 python3 -m unittest tests.integration.test_scenario_catalog -v
 ```
 
@@ -78,3 +79,6 @@ rubric beside the selected tools and answer. The current baseline investigates
 observations and demonstrates tool access, but its literal root-cause metric is
 not a semantic judgment of the expected behavior. `SIM-010` contains two
 distinct alerts, so the 25 scenario cases represent 26 simulated alert records.
+The separate `scenario_validation.json` report checks all 25 complete
+investigations with order-independent tool selection and visible-source
+evidence. It records conservative cause and recommendation cues separately.

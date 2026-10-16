@@ -17,6 +17,8 @@ jobs:
       - run: python -m scripts.audit_data
       - run: python -m scripts.validate_mode_a
       - run: python -m scripts.validate_mode_b
+      - run: python -m scripts.validate_scenarios
+      - run: python -m scripts.validate_reliability
   docker-sandbox:
     runs-on: ubuntu-latest
     steps:

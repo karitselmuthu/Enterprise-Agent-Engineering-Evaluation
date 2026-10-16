@@ -16,9 +16,12 @@ python3 scripts/run_evaluation.py
 python3 -m scripts.run_simulation
 python3 -m scripts.audit_data
 python3 -m scripts.validate_mode_a
+python3 -m scripts.validate_mode_b
+python3 -m scripts.validate_scenarios
+python3 -m scripts.validate_reliability
 ```
 
-CI runs both commands on Python 3.12 and runs the Docker sandbox integration
+CI runs these commands on Python 3.12 and runs the Docker sandbox integration
 test in a separate job. The local Docker test is opt in with
 `RUN_DOCKER_INTEGRATION=1` and requires a running daemon and the
 `python:3.12-alpine` image.
@@ -31,7 +34,30 @@ test in a separate job. The local Docker test is opt in with
 | Context and coding | Budget, static validation, sandbox command | Long session resume, Docker generated-code smoke test |
 | Skills | Manifest validation and policy | MCP skill invocation and tool errors |
 | Evaluation | Metrics, dataset validation, judge response validation, bias probes, benchmark gate | Dataset → injected judge → report, plus MCP and retrieval agent states scored through the evaluator, including invalid judge output and failed incident lookup |
-| Simulation | Virtual clock, public loader, fixture regeneration, future-event hiding, unknown resource | Twenty scenario runs through the standard tool executor, missing data, timeout, denied tool, and label separation |
+| Simulation | Virtual clock, public loader, fixture regeneration, future-event hiding, unknown resource | Twenty-five scenario runs through the standard tool executor, missing data, timeout, denied tool, and label separation |
+
+## Scenario evaluation
+
+`python3 -m scripts.validate_scenarios` investigates all 25 cases at their
+evaluation minutes. The scorer accepts any order of required tool calls and
+additional permitted calls. It checks that a case-specific source marker is
+present in successful tool output; missing telemetry, expected timeout, and
+expected permission denial have explicit handling. Tool and evidence checks
+form the deterministic CI gate. The report also records an exact cause phrase
+proxy and case-specific recommendation cues. Those narrow text checks can
+reject valid paraphrases or accept quoted logs without true causal reasoning;
+review failing cases or use a calibrated judge before calling them semantic
+accuracy. The agent never receives the private rubric.
+
+## Initial reliability workload
+
+`python3 -m scripts.validate_reliability` runs 10 synchronized concurrent
+investigations, 50 sequential requests, and five repeats of the same request.
+It also checks a delayed tool timeout, temporary MCP connection loss followed
+by recovery, malformed tool content, and a stalled investigation terminated
+at a process boundary. `--concurrent` and `--sequential` change the counts.
+The report includes pass/fail checks and observed timings. This workload uses
+synthetic local tools and is not an enterprise throughput or latency benchmark.
 
 ## Proposed API verification contract
 
@@ -57,4 +83,4 @@ counts and skips, commands and fixture IDs, tool-call and MCP results,
 retrieval ranking, deterministic and model-based evaluation scores, Docker
 smoke-test environment, hardware limits, and production gaps. Label anything
 not run as **not verified**. The current snapshot is
-[`reports/verification_2026-10-14.md`](../reports/verification_2026-10-14.md).
+[`reports/verification_2026-10-16.md`](../reports/verification_2026-10-16.md).

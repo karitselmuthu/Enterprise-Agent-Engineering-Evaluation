@@ -20,6 +20,19 @@ class MCPIncidentAgent:
         self.backend = backend or MockBackend()
 
     async def run(self, request: str) -> AgentState:
+        try:
+            return await self._run_connected(request)
+        except (ConnectionError, OSError, TimeoutError) as exc:
+            state = AgentState(request)
+            result = ToolResult("mcp_connection", False, error=str(exc),
+                                error_code="mcp_unavailable")
+            state.tool_results.append(result)
+            state.trace.append({"stage": "connection", "ok": False,
+                                "error_code": result.error_code})
+            state.answer = f"Investigation unavailable: {exc}"
+            return state
+
+    async def _run_connected(self, request: str) -> AgentState:
         state = AgentState(request)
         async with Client(self.server) as client:
             listed = await client.list_tools()

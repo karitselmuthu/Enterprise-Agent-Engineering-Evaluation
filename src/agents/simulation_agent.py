@@ -1,5 +1,7 @@
 """Baseline investigator that only knows the standard tool executor."""
 
+from math import isfinite
+
 from src.tools.executor import ToolExecutor, ToolResult
 
 from .state import AgentState
@@ -109,7 +111,58 @@ class SimulationInvestigator:
     def _call(self, state: AgentState, name: str, arguments: dict[str, str]) -> ToolResult:
         state.trace.append({"stage": "selection", "tool": name, "arguments": arguments})
         result = self.tools.execute(name, arguments)
+        if result.ok and not self._valid_content(name, result.content):
+            result = ToolResult(name, False, error="Malformed tool response",
+                                error_code="malformed_tool_response")
         state.tool_results.append(result)
         state.trace.append({"stage": "execution", "tool": name, "ok": result.ok,
                             "error_code": result.error_code})
         return result
+
+    @staticmethod
+    def _valid_content(name: str, content: object) -> bool:
+        if (not isinstance(content, dict)
+                or not isinstance(content.get("observed_minute"), int)
+                or isinstance(content["observed_minute"], bool)):
+            return False
+        if name == "get_incident_record":
+            return all(isinstance(content.get(key), str) and content[key]
+                       for key in ("id", "service", "server_id", "status")) \
+                and isinstance(content.get("related_incidents", []), list) \
+                and all(isinstance(item, dict) and
+                        all(isinstance(item.get(key), str) and item[key]
+                            for key in ("id", "service"))
+                        for item in content.get("related_incidents", []))
+        field = "samples" if name in {"get_server_metrics", "get_service_network_metrics"} \
+            else "entries"
+        values = content.get(field)
+        if not isinstance(values, list) or not all(isinstance(item, dict) for item in values):
+            return False
+        required = {
+            "get_server_metrics": ("minute", "timestamp", "cpu_percent",
+                                   "memory_percent", "disk_percent"),
+            "get_application_logs": ("minute", "timestamp", "severity", "message"),
+            "get_pod_events": ("minute", "timestamp", "pod", "reason", "message"),
+            "get_service_network_metrics": ("minute", "timestamp", "service", "latency_ms"),
+        }.get(name)
+        if required is None or not all(all(key in item for key in required)
+                                       for item in values):
+            return False
+        if any(not isinstance(item["minute"], int) or isinstance(item["minute"], bool)
+               or not isinstance(item["timestamp"], str) for item in values):
+            return False
+        if name == "get_server_metrics":
+            return all(all(isinstance(item[key], (int, float))
+                           and not isinstance(item[key], bool)
+                           and isfinite(item[key])
+                           for key in ("cpu_percent", "memory_percent", "disk_percent"))
+                       for item in values)
+        if name == "get_service_network_metrics":
+            return all(isinstance(item["service"], str)
+                       and isinstance(item["latency_ms"], (int, float))
+                       and not isinstance(item["latency_ms"], bool)
+                       and isfinite(item["latency_ms"])
+                       for item in values)
+        fields = ("severity", "message") if name == "get_application_logs" \
+            else ("pod", "reason", "message")
+        return all(all(isinstance(item[key], str) for key in fields) for item in values)
