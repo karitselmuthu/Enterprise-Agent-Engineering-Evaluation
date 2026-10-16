@@ -187,6 +187,8 @@ def run_reliability_workload(concurrent: int = 10, sequential: int = 50) -> dict
     return {"passed": all(checks.values()), "checks": checks,
             "concurrent_count": concurrent, "sequential_count": sequential,
             "peak_in_flight": peak_active,
+            "mcp_recovery_attempts": 1,
+            "mcp_recovery_successes": int(checks["temporary_mcp_failure_and_recovery"]),
             "repeated_count": len(repeated),
             "concurrent_batch_ms": concurrent_elapsed_ms,
             "median_investigation_ms": round(median(durations), 3),

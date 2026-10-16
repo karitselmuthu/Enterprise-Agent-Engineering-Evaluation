@@ -19,6 +19,7 @@ python3 -m scripts.validate_mode_a
 python3 -m scripts.validate_mode_b
 python3 -m scripts.validate_scenarios
 python3 -m scripts.validate_reliability
+python3 -m scripts.report_operational_metrics
 ```
 
 CI runs these commands on Python 3.12 and runs the Docker sandbox integration
@@ -59,6 +60,26 @@ at a process boundary. `--concurrent` and `--sequential` change the counts.
 The report includes pass/fail checks and observed timings. This workload uses
 synthetic local tools and is not an enterprise throughput or latency benchmark.
 
+## Operational metric contract
+
+`python3 -m scripts.report_operational_metrics` combines the scenario and
+reliability JSON reports. Tool selection is the share of scenarios selecting
+all required tool names, with call order unconstrained. Tool execution success
+counts successful tool responses over attempted invocations, including the
+two expected failure cases. Average tool calls is attempts per scenario.
+End-to-end latency covers scenario dispatch through answer on the local mock
+backend and reports mean, median, and nearest-rank p95. Recovery success is
+successful recovery after an injected temporary MCP outage; currently its
+denominator is one.
+
+Task completion, root-cause identification accuracy, evidence groundedness,
+hallucination rate, and token consumption are `not_measured` in this baseline.
+The report retains exact cause wording, source evidence availability, and a
+strict deterministic completion cue as diagnostics only. Valid semantic scores
+need adjudicated case outcomes and claim-level evidence labels; token use needs
+backend usage telemetry. Do not treat a `null` value as zero or a cue as an
+accuracy score.
+
 ## Proposed API verification contract
 
 The following routes are **not implemented**. When an API layer is added,
@@ -83,4 +104,4 @@ counts and skips, commands and fixture IDs, tool-call and MCP results,
 retrieval ranking, deterministic and model-based evaluation scores, Docker
 smoke-test environment, hardware limits, and production gaps. Label anything
 not run as **not verified**. The current snapshot is
-[`reports/verification_2026-10-16.md`](../reports/verification_2026-10-16.md).
+[`reports/verification_2026-10-17.md`](../reports/verification_2026-10-17.md).

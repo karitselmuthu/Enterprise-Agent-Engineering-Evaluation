@@ -70,7 +70,7 @@ trajectory evaluation, and an offline benchmark. Run
 
 The [verification strategy](docs/verification_strategy.md) defines test and
 evidence requirements, including a proposed API contract. The API routes are
-not implemented yet. A dated [verification snapshot](reports/verification_2026-10-16.md)
+not implemented yet. A dated [verification snapshot](reports/verification_2026-10-17.md)
 records current results and gaps.
 
 ## Simulation milestone
@@ -158,6 +158,7 @@ initial load checks from the repository root:
 ```sh
 python3 -m scripts.validate_scenarios
 python3 -m scripts.validate_reliability
+python3 -m scripts.report_operational_metrics
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
@@ -170,3 +171,29 @@ cue rates are not semantic accuracy scores. The reliability command covers 10
 simultaneous investigations, 50 sequential requests, repeatability, tool
 latency, MCP outage and recovery, malformed responses, and a process-bounded
 agent timeout. Reports are written under `reports/scenario_results/`.
+
+### Operational metrics
+
+Run `python3 -m scripts.report_operational_metrics` after the scenario and
+reliability commands above. It writes
+`reports/scenario_results/operational_metrics.json`. The report uses only the
+local mock agent and synthetic scenarios. Each fraction includes its numerator
+and denominator; `null` with `not_measured` means the required evidence is not
+collected yet.
+
+| Metric | Current definition and status |
+| --- | --- |
+| Tool Selection Accuracy | Required tool names selected in each scenario, in any order: 25/25 measured. |
+| Tool Execution Success Rate | Successful calls divided by all attempted calls, including injected faults: 78/80 measured. |
+| Task Completion Rate | Not measured; the deterministic strict completion cue (3/25) is only a diagnostic proxy. |
+| Root Cause Identification Accuracy | Not measured; exact private cause wording (0/19) is only a diagnostic proxy and misses valid paraphrases. |
+| Evidence Groundedness | Not measured at the claim level; source evidence availability (25/25) only confirms relevant observations were retrieved. |
+| Hallucination Rate | Not measured; needs claim-level annotations or a calibrated judge. |
+| Recovery Success Rate | One successful recovery after one injected temporary MCP outage: 1/1, a small sample. |
+| Average Tool Calls | All attempted scenario tool invocations divided by investigations: 80/25 = 3.2. |
+| End-to-End Latency | Mean, median, and nearest-rank p95 in milliseconds, measured from scenario dispatch through answer. Machine-dependent; excludes dataset loading and report writing. |
+| Token Consumption | Not measured; the deterministic simulation agent makes no LLM calls and emits no token usage. |
+
+The scenario and reliability reports are regenerated each run. Re-run the
+metric command after either input report changes. These metrics do not yet
+measure production incident quality or model-driven agent performance.

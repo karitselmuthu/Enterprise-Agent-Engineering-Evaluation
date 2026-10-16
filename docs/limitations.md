@@ -34,3 +34,8 @@
   are useful regression probes, not validated semantic judgments. The initial
   10-concurrent and 50-sequential workload is local synthetic stress, not a
   production capacity estimate.
+- The operational metric report measures tool use and local latency only.
+  Task completion, root-cause accuracy, claim-level groundedness,
+  hallucination, and token consumption have no validated observations yet.
+  The MCP recovery rate comes from one injected outage, so it cannot estimate
+  real-world recovery reliability.

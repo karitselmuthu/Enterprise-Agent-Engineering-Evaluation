@@ -6,6 +6,7 @@ a failure can still be a valid paraphrase and needs human or judge review.
 
 import json
 from statistics import mean
+from time import perf_counter
 
 from simulation.adapters.tools import replay_tools
 from simulation.clock import VirtualClock
@@ -62,8 +63,10 @@ def evaluate_scenarios(public_path=DEFAULT_SCENARIOS, truth_path=DEFAULT_TRUTH) 
     results = []
     for identifier in sorted(scenarios):
         label = labels[identifier]
+        started = perf_counter()
         engine = ReplayEngine(scenarios[identifier], VirtualClock(label["evaluation_minute"]))
         state = SimulationInvestigator(replay_tools(engine)).run(identifier)
+        duration_ms = (perf_counter() - started) * 1000
         selected = [event["tool"] for event in state.trace
                     if event.get("stage") == "selection"]
         marker, actions = CHECKS[identifier]
@@ -98,6 +101,11 @@ def evaluate_scenarios(public_path=DEFAULT_SCENARIOS, truth_path=DEFAULT_TRUTH) 
             "evidence_retrieved": evidence,
             "root_cause_supported_proxy": cause,
             "recommendation_cue": action,
+            "strict_completion_proxy": bool(tool_selection and evidence and action
+                                            and (cause is None or cause)),
+            "attempted_tool_calls": len(state.tool_results),
+            "successful_tool_calls": sum(result.ok for result in state.tool_results),
+            "duration_ms": round(duration_ms, 3),
             "selected_tools": selected,
             "tool_failures": [{"name": name, "error_code": code} for name, code in failures],
             "answer": state.answer,
@@ -112,5 +120,7 @@ def evaluate_scenarios(public_path=DEFAULT_SCENARIOS, truth_path=DEFAULT_TRUTH) 
             float(item["root_cause_supported_proxy"]) for item in results
             if item["root_cause_supported_proxy"] is not None),
         "recommendation_cue_rate": mean(float(item["recommendation_cue"]) for item in results),
+        "strict_completion_proxy_rate": mean(float(item["strict_completion_proxy"])
+                                              for item in results),
         "results": results,
     }

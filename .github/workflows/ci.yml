@@ -19,6 +19,7 @@ jobs:
       - run: python -m scripts.validate_mode_b
       - run: python -m scripts.validate_scenarios
       - run: python -m scripts.validate_reliability
+      - run: python -m scripts.report_operational_metrics
   docker-sandbox:
     runs-on: ubuntu-latest
     steps:
