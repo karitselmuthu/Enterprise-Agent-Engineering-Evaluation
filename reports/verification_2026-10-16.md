@@ -13,7 +13,7 @@ not establish production accuracy or capacity.
 | Reliability workload | 10 synchronized concurrent investigations, 50 sequential requests, and 5 identical repeats passed |
 | Failure probes | Delayed tool timeout, MCP outage and recovery, malformed tool content, and bounded agent timeout passed |
 | Mode A and Mode B | Both validation commands passed locally |
-| Docker | Local daemon unavailable; CI Docker result to be recorded after push |
+| Docker | Local daemon unavailable; CI Docker sandbox job passed |
 
 Run from the repository root:
 
@@ -35,3 +35,6 @@ is too small to support a throughput claim.
 The API endpoints, real infrastructure connectors, semantic judge calibration,
 and hosted or local model quality remain unverified. The existing broader
 project limitations remain in [limitations](../docs/limitations.md).
+
+Both the Python test job and Docker sandbox job passed for the validation
+implementation in [GitHub Actions run 38866613054](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38866613054).
