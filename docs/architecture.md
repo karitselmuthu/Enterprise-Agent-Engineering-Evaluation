@@ -37,10 +37,18 @@ through `ToolExecutor`; private labels are loaded only by the evaluation
 runner. See [Simulation](simulation.md) for the boundary and limitations.
 
 The replay investigator now uses a bounded lifecycle in
-`src/agents/investigation.py`. Every attempted tool call passes the host policy
-in `src/policy/engine.py` and the executor's existing name allowlist and input
-schema checks. Successful observations become source-linked cards in
-`src/evidence/`; answer observations cite their card IDs. The run record
+`src/agents/investigation.py`. When it uses the standard `ToolExecutor`, every
+attempted tool call passes the host policy in `src/policy/engine.py` and the
+executor's name allowlist and input schema checks. Successful observations
+become source-linked cards in `src/evidence/`; answer observations cite their card IDs. The run record
 captures ordered events and can be exported as JSONL. The
 [comparison document](architecture_improvement_comparison.md) maps the review's
 target structure to the paths actually changed.
+
+These are separate agent paths: the replay investigator does not currently
+use Ollama, MCP, retrieval, or SQLite memory. Its evidence cards and raw tool
+results remain in memory, and the explicit JSONL export contains events only.
+The MCP agent has its own allowlist rather than the replay executor's host
+policy. See the
+[implementation maturity review](../reports/implementation_maturity_review_2026-10-17.md)
+for tested behavior and remaining boundaries.

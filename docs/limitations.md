@@ -6,11 +6,14 @@
   Python handler. Only trusted read-only handlers are registered.
 - The new host policy blocks side effects by default and requires a verifier
   for explicitly enabled mutations, but no production identity provider,
-  approval workflow, or operational write tool is implemented.
+  approval workflow, or operational write tool is implemented. In-process code
+  can call a registered handler directly and bypass the executor; the policy
+  is not a sandbox for untrusted plugins.
 - Replay evidence cards point to in-memory tool results. They are deterministic
   source references, not a validated causal graph; cited observations alone
   cannot establish root-cause correctness. JSONL event export is explicit,
-  not automatic durable audit storage.
+  not automatic durable audit storage, and does not contain the cards or raw
+  tool results needed to resolve citations after a restart.
 - The investigation wall-time budget is checked before each tool call. A
   running Python handler can exceed the remaining wall time before its own
   executor timeout reports failure.

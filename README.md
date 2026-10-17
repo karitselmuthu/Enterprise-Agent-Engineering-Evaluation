@@ -58,6 +58,11 @@ needed only for the coding sandbox and the optional live demo.
 | Simulation | Virtual-clock replay, live polling of synthetic events, and standard incident/metric/log tool adapters | [Simulation guide](docs/simulation.md) |
 | Architecture review improvements | Host policy gate, read-only investigation lifecycle and budget, source-linked evidence cards, event records, and repeated-run process checks | [Structure comparison and scope](docs/architecture_improvement_comparison.md) |
 
+The [implementation maturity review](reports/implementation_maturity_review_2026-10-17.md)
+checks the code paths against the architecture claims, records local test and
+Ollama results, and lists the gaps to close before treating this as a
+production-ready agent.
+
 The [experiment scripts](experiments/) demonstrate each lecture phase. The
 HTTP API and unified CLI are proposed interfaces; they are not runnable yet.
 See the [verification strategy](docs/verification_strategy.md) for their
