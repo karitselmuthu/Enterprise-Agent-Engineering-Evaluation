@@ -4,6 +4,18 @@
   protocol tests, but no live-model quality evaluation yet.
 - The phase 6.1 thread timeout reports a timeout but cannot stop a running
   Python handler. Only trusted read-only handlers are registered.
+- The new host policy blocks side effects by default and requires a verifier
+  for explicitly enabled mutations, but no production identity provider,
+  approval workflow, or operational write tool is implemented.
+- Replay evidence cards point to in-memory tool results. They are deterministic
+  source references, not a validated causal graph; cited observations alone
+  cannot establish root-cause correctness. JSONL event export is explicit,
+  not automatic durable audit storage.
+- The investigation wall-time budget is checked before each tool call. A
+  running Python handler can exceed the remaining wall time before its own
+  executor timeout reports failure.
+- Repeated-run process rates use a deterministic mock baseline. They measure
+  lifecycle and citation invariants, not model variability or semantic RCA.
 - MCP tools currently read local fixtures over stdio. There is no remote
   authentication, production infrastructure adapter, or server deployment.
 - SQLite memory is local to one machine. An approved fact is trusted because

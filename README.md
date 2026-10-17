@@ -56,6 +56,7 @@ needed only for the coding sandbox and the optional live demo.
 | Lecture 6.6–6.7 | Docker-restricted code experiment and permission-scoped skills | [Agent guide](docs/lecture_06_agents.md) |
 | Lecture 7.1–7.5 | Optional local judge, deterministic metrics, bias probes, trajectory evaluation, and offline benchmark | [Evaluation guide](docs/lecture_07_evaluation.md) |
 | Simulation | Virtual-clock replay, live polling of synthetic events, and standard incident/metric/log tool adapters | [Simulation guide](docs/simulation.md) |
+| Architecture review improvements | Host policy gate, read-only investigation lifecycle and budget, source-linked evidence cards, event records, and repeated-run process checks | [Structure comparison and scope](docs/architecture_improvement_comparison.md) |
 
 The [experiment scripts](experiments/) demonstrate each lecture phase. The
 HTTP API and unified CLI are proposed interfaces; they are not runnable yet.
@@ -126,11 +127,16 @@ The main checks run from the repository root:
     python3 -m scripts.validate_mode_b
     python3 -m scripts.validate_scenarios
     python3 -m scripts.validate_reliability
+    python3 -m scripts.validate_process --trials 5
     python3 -m scripts.report_operational_metrics
     python3 -m scripts.validate_synthetic_load
     python3 scripts/run_evaluation.py
 
 The scenario gate checks tool selection and visible evidence across 25 cases.
+The process check repeats each case and verifies lifecycle milestones, budget
+enforcement, and evidence references. Its pass rates are workflow proxies, not
+root-cause accuracy. See the [architecture review comparison](docs/architecture_improvement_comparison.md)
+for changed paths, recommended paths, and deferred work.
 The reliability workload includes concurrent and sequential investigations,
 timeouts, malformed responses, and temporary MCP failure. Generated JSON
 reports go under reports/. The [operational metric definitions](docs/verification_strategy.md#operational-metric-contract)
@@ -149,7 +155,7 @@ base targets.
 
 | Path | Purpose |
 | --- | --- |
-| [src/](src/) | Implemented agent, tools, MCP, memory, retrieval, context, coding, skills, and evaluation packages. Empty __init__.py files mark importable packages. |
+| [src/](src/) | Implemented agent, evidence, policy, tools, MCP, memory, retrieval, context, coding, skills, and evaluation packages. Empty __init__.py files mark importable packages. |
 | [simulation/](simulation/) | Replay and live simulation engines, generators, importers, and adapters. The live demo has its own Dockerfile under simulation/live_stack/. |
 | [data/](data/) | Tracked teaching fixtures and scenario labels. data/imported/ is reserved for your own datasets and ignored by Git. |
 | [experiments/](experiments/) | Runnable Lecture 6 and 7 demonstrations. |

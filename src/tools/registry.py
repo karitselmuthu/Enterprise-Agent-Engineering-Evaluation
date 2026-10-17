@@ -8,6 +8,13 @@ class Tool:
     description: str
     input_schema: dict[str, Any]
     handler: Callable[..., Any]
+    risk: str = "low"
+    side_effects: bool = False
+    idempotent: bool = True
+    required_scopes: frozenset[str] = frozenset()
+    environments: frozenset[str] = frozenset({"dev", "staging", "prod"})
+    production_requires_approval: bool = True
+    verifier: Callable[[Any], bool] | None = None
 
     def validate(self, args: dict[str, Any]) -> None:
         if not isinstance(args, dict):
@@ -30,6 +37,8 @@ class ToolRegistry:
     def register(self, tool: Tool) -> None:
         if tool.name in self._tools:
             raise ValueError(f"Duplicate tool: {tool.name}")
+        if tool.risk not in {"low", "medium", "high"} or not tool.environments:
+            raise ValueError(f"Invalid policy metadata for {tool.name}")
         self._tools[tool.name] = tool
 
     def get(self, name: str) -> Tool:

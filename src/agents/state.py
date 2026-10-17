@@ -2,6 +2,8 @@
 from dataclasses import dataclass, field
 from typing import Any
 from src.tools.executor import ToolResult
+from src.evidence.schema import EvidenceCard
+from .investigation import InvestigationRecord
 
 @dataclass
 class AgentState:
@@ -9,3 +11,5 @@ class AgentState:
     tool_results: list[ToolResult] = field(default_factory=list)
     trace: list[dict[str, Any]] = field(default_factory=list)
     answer: str = ""
+    evidence_cards: list[EvidenceCard] = field(default_factory=list)
+    investigation: InvestigationRecord | None = None

@@ -35,3 +35,12 @@ The simulation milestone adds `simulation/` as a separate replay and tool
 adapter package. Its public event dataset feeds a baseline investigator
 through `ToolExecutor`; private labels are loaded only by the evaluation
 runner. See [Simulation](simulation.md) for the boundary and limitations.
+
+The replay investigator now uses a bounded lifecycle in
+`src/agents/investigation.py`. Every attempted tool call passes the host policy
+in `src/policy/engine.py` and the executor's existing name allowlist and input
+schema checks. Successful observations become source-linked cards in
+`src/evidence/`; answer observations cite their card IDs. The run record
+captures ordered events and can be exported as JSONL. The
+[comparison document](architecture_improvement_comparison.md) maps the review's
+target structure to the paths actually changed.
