@@ -27,3 +27,6 @@ RUN_LIVE_COMPOSE=1 python3 -m unittest tests.integration.test_live_compose -v
 
 The CI Docker job runs that test separately. No Stage 2 dataset quality or
 Stage 3 agent accuracy score is reported.
+
+Both CI jobs passed for commit `53cf945`, including the Docker sandbox and
+optional Compose smoke tests, in [GitHub Actions run 38985243561](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38985243561).
