@@ -29,230 +29,136 @@
   The platform will demonstrate how agents plan actions, execute tools, maintain context, retrieve information, and produce recommendations.
 
 # Example use case
-  User request:
-  "Investigate why the production application is experiencing high latency."
 
-## Implementation status
+Investigate why the production application is experiencing high latency. The
+default agent reads controlled incident observations, selects permitted tools,
+and reports the evidence it found. The default backend is deterministic and
+runs offline.
 
-Phase 6.1 provides a working tool-enabled incident agent with schema checks,
-permissions, execution traces, timeout reporting, and a local Ollama adapter.
-The default backend works offline with sample fixtures.
+## Start here
 
-Run `PYTHONPATH=. python3 scripts/run_agent.py INC-001` and
-`python3 -m unittest discover -s tests -p 'test_*.py' -v`.
-See [Lecture 06](docs/lecture_06_agents.md) for phase details.
+From the repository root, use Python 3.11 or newer:
 
-Phase 6.2 adds an MCP server and a permission-aware MCP client. Install the
-project with `python3 -m pip install -e .` before running the MCP experiment.
+    python3 -m pip install -e .
+    python3 scripts/run_agent.py INC-001
+    python3 -m unittest discover -s tests -p 'test_*.py' -v
 
-Phase 6.3 adds SQLite-backed investigation memory. The memory experiment
-shows a session resuming after the agent is reconstructed.
+The installation uses the dependencies declared in [pyproject.toml](pyproject.toml).
+A local Ollama backend is optional; the mock backend is the default. Docker is
+needed only for the coding sandbox and the optional live demo.
 
-Phase 6.4 adds section-level TF-IDF search over five sample IT runbooks and
-adds cited runbook guidance to MCP incident investigations.
+## What is implemented
 
-Phase 6.5 adds a configurable context budget with conversation compaction and
-preserved approved facts for long-running investigations.
+| Area | Current capability | Where to look |
+| --- | --- | --- |
+| Lecture 6.1–6.2 | Tool selection, schemas, permissions, traces, and MCP discovery/invocation | [Agent guide](docs/lecture_06_agents.md) |
+| Lecture 6.3–6.5 | SQLite investigation memory, TF-IDF runbook retrieval, and context budgeting | [Architecture](docs/architecture.md) |
+| Lecture 6.6–6.7 | Docker-restricted code experiment and permission-scoped skills | [Agent guide](docs/lecture_06_agents.md) |
+| Lecture 7.1–7.5 | Optional local judge, deterministic metrics, bias probes, trajectory evaluation, and offline benchmark | [Evaluation guide](docs/lecture_07_evaluation.md) |
+| Simulation | Virtual-clock replay, live polling of synthetic events, and standard incident/metric/log tool adapters | [Simulation guide](docs/simulation.md) |
 
-Phase 6.6 adds a controlled coding-agent experiment that generates and tests a
-Python log analyzer inside a resource-limited Docker container.
+The [experiment scripts](experiments/) demonstrate each lecture phase. The
+HTTP API and unified CLI are proposed interfaces; they are not runnable yet.
+See the [verification strategy](docs/verification_strategy.md) for their
+planned contracts.
 
-Phase 6.7 adds discoverable, permission-scoped skill manifests for incident
-analysis and service health.
+## Simulation and data
 
-Lecture 7 starts with an optional local Ollama judge for answer assessment.
-The mock backend remains the default for agent development and automated tests.
-See [Lecture 07](docs/lecture_07_evaluation.md).
+The 25-case replay dataset is in
+[data/simulation/scenarios.jsonl](data/simulation/scenarios.jsonl). Private
+evaluation labels are stored separately in
+[data/evaluation_datasets/simulation_ground_truth.jsonl](data/evaluation_datasets/simulation_ground_truth.jsonl).
+The agent receives time-bounded observations through its normal tool executor,
+not those labels.
 
-Lecture 7 also includes deterministic answer metrics, judge bias probes, agent
-trajectory evaluation, and an offline benchmark. Run
-`python3 scripts/run_evaluation.py` to produce a reproducible report.
+Five additional synthetic blueprints cover healthy operation, CPU saturation,
+memory growth, database failure, and network latency. Regenerate their public
+observations and compare an early and late investigation:
 
-The [verification strategy](docs/verification_strategy.md) defines test and
-evidence requirements, including a proposed API contract. The API routes are
-not implemented yet. A dated [verification snapshot](reports/verification_2026-10-17.md)
-records current results and gaps.
+    python3 -m scripts.generate_synthetic
+    python3 -m scripts.run_synthetic SYN-002 --minute 5
+    python3 -m scripts.run_synthetic SYN-002 --minute 15
 
-## Simulation milestone
+The blueprints in [simulation/scenarios](simulation/scenarios/) use the JSON
+subset of YAML, so they require no YAML package. The generated file is
+[data/synthetic/scenarios.jsonl](data/synthetic/scenarios.jsonl).
 
-The [simulation layer](docs/simulation.md) adds 25 replayable incident scenarios,
-a virtual clock, and five read-only infrastructure tools. Public observations
-and private evaluation labels are stored separately. Run
-`python3 -m scripts.run_simulation` for a baseline scenario report. This does
-not replace the small deterministic unit-test fixtures.
+### Stage 2: bring your own logs
 
-Five additional [declarative synthetic scenarios](docs/simulation.md#declarative-synthetic-scenarios)
-cover normal operation, CPU saturation, memory growth, database failure, and
-network latency. They use the same tool names, input schemas, and permission
-checks as the 25-case replay. Generate and inspect one from the repository root:
+No public dataset is bundled. When you choose data, edit the
+[field mapping](configs/public_logs.example.json) for your source JSONL fields
+and run:
 
-```sh
-python3 -m scripts.generate_synthetic
-python3 -m scripts.run_synthetic SYN-002 --minute 5
-python3 -m scripts.run_synthetic SYN-002 --minute 15
-python3 -m scripts.validate_synthetic_load
-python3 -m unittest tests.scenarios.test_synthetic_blueprints tests.load.test_simulation_load -v
-```
+    python3 -m scripts.import_public_logs path/to/logs.jsonl \
+      --mapping configs/public_logs.example.json \
+      --output data/imported/my_dataset/logs.jsonl
 
-The generated public observations are in `data/synthetic/scenarios.jsonl`.
-The `.yaml` blueprints use the JSON subset of YAML, so no YAML package is
-required. Public log datasets and a lightweight Docker Compose environment
-are later stages; neither is part of the current validation scores.
-The load command writes `reports/reliability/synthetic_load.json` with
-snapshot-consistency results for 10 concurrent and 50 sequential local reads.
-The dated [simulation verification record](reports/simulation_verification_2026-10-17.md)
-summarizes the local checks and remaining stages.
+The importer validates UTC timestamps, service, severity, and message, then
+writes normalized observations to a Git-ignored directory. It does not create
+incident timelines or root-cause labels. Source-specific parsing and evaluation
+labels remain work for the dataset you choose.
 
-### Optional Stage 2 and Stage 3 paths
+### Stage 3: optional local fault demo
 
-Stage 2 is ready for data you choose later. Place your own JSONL logs outside
-the tracked fixtures, copy and edit `configs/public_logs.example.json` to map
-your source fields, then normalize them:
+The [Compose profile](compose.yaml) starts one lightweight Python HTTP service
+with SQLite. It is a user option, not part of the default agent workflow. With
+a working Docker daemon:
 
-```sh
-python3 -m scripts.import_public_logs path/to/your/logs.jsonl \
-  --mapping configs/public_logs.example.json \
-  --output data/imported/my_dataset/logs.jsonl
-```
+    docker compose --profile live-demo up --build -d
+    python3 -m scripts.run_live_demo
+    python3 -m scripts.inject_live_fault database_failure
+    python3 -m scripts.run_live_demo
+    python3 -m scripts.inject_live_fault recovered
+    python3 -m scripts.run_live_demo
+    docker compose --profile live-demo down
 
-The importer validates UTC timestamps, service, severity, and message. It
-does not infer incident timelines or root-cause labels, and imported files are
-ignored by Git. No public dataset is bundled.
+The host port is bound to 127.0.0.1:8765. The agent reads live incident,
+metrics, and logs through the same tool names and schemas as replay. The named
+SQLite volume persists; use docker compose --profile live-demo down -v only
+when you want to remove its demo data. This is a local prototype, not a
+production integration or a scored live evaluation.
 
-Stage 3 has an **opt-in local demo** using a small Python HTTP service and
-SQLite. It is separate from the default mock tests. With Docker running:
+## Verify behavior
 
-```sh
-docker compose --profile live-demo up --build -d
-python3 -m scripts.run_live_demo
-python3 -m scripts.inject_live_fault database_failure
-python3 -m scripts.run_live_demo
-python3 -m scripts.inject_live_fault recovered
-python3 -m scripts.run_live_demo
-docker compose --profile live-demo down
-```
+The main checks run from the repository root:
 
-The demo binds only to `127.0.0.1:8765` on the host. Its incident, metric, and
-log observations use the same agent tool contracts. The named SQLite volume
-persists across restarts; `docker compose --profile live-demo down -v` also
-removes that demo data. This is a controlled local option, not a production
-integration or a scored Stage 3 evaluation. See [simulation setup](docs/simulation.md).
-The [optional setup verification record](reports/optional_data_live_setup_2026-10-17.md)
-lists the checks and limits.
+    python3 -m scripts.validate_mode_a
+    python3 -m scripts.validate_mode_b
+    python3 -m scripts.validate_scenarios
+    python3 -m scripts.validate_reliability
+    python3 -m scripts.report_operational_metrics
+    python3 -m scripts.validate_synthetic_load
+    python3 scripts/run_evaluation.py
 
-The [scenario catalog](docs/scenario_catalog.md) lists the 25 distinct cases,
-including pod crashes, cross-service network faults, concurrent incidents,
-missing evidence, and healthy operation. Each private rubric records the
-scenario name, affected service, expected findings, tools, and behavior. The
-baseline report includes these rubrics alongside observed agent traces; tool
-coverage does not imply the agent met every behavioral expectation.
+The scenario gate checks tool selection and visible evidence across 25 cases.
+The reliability workload includes concurrent and sequential investigations,
+timeouts, malformed responses, and temporary MCP failure. Generated JSON
+reports go under reports/. The [operational metric definitions](docs/verification_strategy.md#operational-metric-contract)
+explain each denominator. Task completion, semantic root-cause accuracy,
+claim-level groundedness, hallucination rate, and token use remain unmeasured
+in the mock simulation baseline.
 
-The [data volume audit](docs/data_volume_audit.md) verifies the current five
-dataset categories against the suggested initial sizes. None of those volume
-targets has been reached; run `python3 -m scripts.audit_data` for current counts.
+See the [latest verification records](reports/verification_2026-10-17.md),
+[synthetic simulation record](reports/simulation_verification_2026-10-17.md),
+and [optional setup record](reports/optional_data_live_setup_2026-10-17.md).
+The [data volume audit](docs/data_volume_audit.md) records current counts
+against the larger suggested inventory, metric, log, incident, and knowledge
+base targets.
 
-### Mode A replay validation
+## Repository map and reserved locations
 
-From the repository root, inspect the payment incident at three virtual times.
-These commands wait for no wall-clock time and use only synthetic data:
-
-```sh
-python3 -m scripts.validate_mode_a --minute 15
-python3 -m scripts.validate_mode_a --minute 25
-python3 -m scripts.validate_mode_a --minute 35
-```
-
-At 10:15 UTC, expect CPU 82%, memory 73%, a connection warning, and advice to
-gather evidence. At 10:25 UTC, expect CPU 97%, memory 89%, failed requests,
-and escalation advice. At 10:35 UTC, expect a resolved status and recovery
-monitoring advice. Each command prints the visible observations, selected
-tools, and agent answer.
-
-Run the automated acceptance check:
-
-```sh
-python3 -m scripts.validate_mode_a
-python3 -m unittest tests.integration.test_mode_a_validation -v
-```
-
-The check exits nonzero on failure and writes
-`reports/scenario_results/mode_a_validation.json`. It verifies event order,
-future-event hiding, changing evidence and advice, recovery, and repeatability.
-See [simulation details](docs/simulation.md) for the agent/data boundary.
-
-### Mode B live polling and concurrency
-
-Mode B publishes the same public scenario events at a configurable wall-clock
-interval. Each poll receives a frozen event snapshot, so its three tool calls
-observe the same virtual minute even when the publisher advances concurrently.
-Run the default three-client check (about 0.35 seconds of scheduled events):
-
-```sh
-python3 -m scripts.validate_mode_b
-python3 -m unittest tests.integration.test_mode_b_validation -v
-```
-
-To slow the publisher and change the polling load:
-
-```sh
-python3 -m scripts.validate_mode_b --interval 0.5 --poll-interval 0.1 --clients 8
-```
-
-`--interval` is seconds per scenario event; `--poll-interval` is seconds between
-polls for each client. The command exits nonzero if publication, overlapping
-polls, snapshot consistency, or final recovery checks fail. It writes every
-poll's status, tool outcomes, and answer to
-`reports/scenario_results/mode_b_validation.json`. A polling client can miss
-short-lived intermediate states if its interval is too long; inspect the
-report's observed minutes to see which states each client actually sampled.
-The publisher paces deterministic synthetic events; it does not generate new
-random incidents or connect to production infrastructure.
-
-### Four-level agent validation
-
-The [verification strategy](docs/verification_strategy.md) separates unit,
-integration, full-scenario, and reliability testing. Run the scenario and
-initial load checks from the repository root:
-
-```sh
-python3 -m scripts.validate_scenarios
-python3 -m scripts.validate_reliability
-python3 -m scripts.report_operational_metrics
-python3 -m unittest discover -s tests -p 'test_*.py' -v
-```
-
-The scenario report checks required tool names without enforcing one call
-order, confirms case-specific evidence in successful tool output, and records
-conservative cause and recommendation cues. The command fails if required
-tools or source evidence are missing. The current baseline passes those two
-foundation checks but has substantial diagnosis and recommendation gaps; the
-cue rates are not semantic accuracy scores. The reliability command covers 10
-simultaneous investigations, 50 sequential requests, repeatability, tool
-latency, MCP outage and recovery, malformed responses, and a process-bounded
-agent timeout. Reports are written under `reports/scenario_results/`.
-
-### Operational metrics
-
-Run `python3 -m scripts.report_operational_metrics` after the scenario and
-reliability commands above. It writes
-`reports/scenario_results/operational_metrics.json`. The report uses only the
-local mock agent and synthetic scenarios. Each fraction includes its numerator
-and denominator; `null` with `not_measured` means the required evidence is not
-collected yet.
-
-| Metric | Current definition and status |
+| Path | Purpose |
 | --- | --- |
-| Tool Selection Accuracy | Required tool names selected in each scenario, in any order: 25/25 measured. |
-| Tool Execution Success Rate | Successful calls divided by all attempted calls, including injected faults: 78/80 measured. |
-| Task Completion Rate | Not measured; the deterministic strict completion cue (3/25) is only a diagnostic proxy. |
-| Root Cause Identification Accuracy | Not measured; exact private cause wording (0/19) is only a diagnostic proxy and misses valid paraphrases. |
-| Evidence Groundedness | Not measured at the claim level; source evidence availability (25/25) only confirms relevant observations were retrieved. |
-| Hallucination Rate | Not measured; needs claim-level annotations or a calibrated judge. |
-| Recovery Success Rate | One successful recovery after one injected temporary MCP outage: 1/1, a small sample. |
-| Average Tool Calls | All attempted scenario tool invocations divided by investigations: 80/25 = 3.2. |
-| End-to-End Latency | Mean, median, and nearest-rank p95 in milliseconds, measured from scenario dispatch through answer. Machine-dependent; excludes dataset loading and report writing. |
-| Token Consumption | Not measured; the deterministic simulation agent makes no LLM calls and emits no token usage. |
+| [src/](src/) | Implemented agent, tools, MCP, memory, retrieval, context, coding, skills, and evaluation packages. Empty __init__.py files mark importable packages. |
+| [simulation/](simulation/) | Replay and live simulation engines, generators, importers, and adapters. The live demo has its own Dockerfile under simulation/live_stack/. |
+| [data/](data/) | Tracked teaching fixtures and scenario labels. data/imported/ is reserved for your own datasets and ignored by Git. |
+| [experiments/](experiments/) | Runnable Lecture 6 and 7 demonstrations. |
+| [scripts/](scripts/) | Current command-line entry points for agents, generation, imports, and verification. |
+| [tests/](tests/) | Unit, integration, scenario, evaluation, and local load checks. |
+| [reports/](reports/) | Dated evidence records and generated JSON reports; scripts create output directories when needed. |
+| [configs/](configs/) | Active public-log field-mapping example; other configuration files will be added when their consumers exist. |
+| [api/](api/) | Reserved for the future HTTP routes and schemas described in the verification strategy. No API code is shipped yet. |
+| [cli/](cli/) | Reserved for a future unified CLI; use scripts/ today. |
 
-The scenario and reliability reports are regenerated each run. Re-run the
-metric command after either input report changes. These metrics do not yet
-measure production incident quality or model-driven agent performance.
+See [current limitations](docs/limitations.md) before interpreting mock
+results as production reliability or incident diagnosis accuracy.
