@@ -12,3 +12,6 @@ dependencies = ["mcp>=2.3,<3"]
 
 [tool.setuptools.packages.find]
 include = ["src*", "simulation*"]
+
+[tool.setuptools.package-data]
+simulation = ["scenarios/*.yaml"]

@@ -1,0 +1,81 @@
+{
+  "scenario_id": "SYN-004",
+  "start_at": "2026-10-17T10:00:00Z",
+  "incident": {
+    "server_id": "prod-payment-004",
+    "service": "payment-service",
+    "summary": "Payment database requests failing",
+    "severity": "P1"
+  },
+  "allowed_tools": [
+    "get_incident_record",
+    "get_server_metrics",
+    "get_application_logs"
+  ],
+  "timeline": [
+    {
+      "minute": 0,
+      "status": "open",
+      "metrics": {
+        "cpu_percent": 32,
+        "memory_percent": 47,
+        "disk_percent": 44,
+        "network_latency_ms": 20
+      },
+      "logs": [
+        {
+          "severity": "INFO",
+          "message": "Database queries healthy"
+        }
+      ]
+    },
+    {
+      "minute": 5,
+      "status": "degraded",
+      "metrics": {
+        "cpu_percent": 43,
+        "memory_percent": 51,
+        "disk_percent": 44,
+        "network_latency_ms": 55
+      },
+      "logs": [
+        {
+          "severity": "WARN",
+          "message": "Database connection retries increasing"
+        }
+      ]
+    },
+    {
+      "minute": 10,
+      "status": "degraded",
+      "metrics": {
+        "cpu_percent": 61,
+        "memory_percent": 58,
+        "disk_percent": 45,
+        "network_latency_ms": 160
+      },
+      "logs": [
+        {
+          "severity": "ERROR",
+          "message": "Connection refused by database endpoint"
+        }
+      ]
+    },
+    {
+      "minute": 15,
+      "status": "degraded",
+      "metrics": {
+        "cpu_percent": 72,
+        "memory_percent": 65,
+        "disk_percent": 45,
+        "network_latency_ms": 220
+      },
+      "logs": [
+        {
+          "severity": "ERROR",
+          "message": "Payment requests failing while database unavailable"
+        }
+      ]
+    }
+  ]
+}

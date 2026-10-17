@@ -81,6 +81,28 @@ and private evaluation labels are stored separately. Run
 `python3 -m scripts.run_simulation` for a baseline scenario report. This does
 not replace the small deterministic unit-test fixtures.
 
+Five additional [declarative synthetic scenarios](docs/simulation.md#declarative-synthetic-scenarios)
+cover normal operation, CPU saturation, memory growth, database failure, and
+network latency. They use the same tool names, input schemas, and permission
+checks as the 25-case replay. Generate and inspect one from the repository root:
+
+```sh
+python3 -m scripts.generate_synthetic
+python3 -m scripts.run_synthetic SYN-002 --minute 5
+python3 -m scripts.run_synthetic SYN-002 --minute 15
+python3 -m scripts.validate_synthetic_load
+python3 -m unittest tests.scenarios.test_synthetic_blueprints tests.load.test_simulation_load -v
+```
+
+The generated public observations are in `data/synthetic/scenarios.jsonl`.
+The `.yaml` blueprints use the JSON subset of YAML, so no YAML package is
+required. Public log datasets and a lightweight Docker Compose environment
+are later stages; neither is part of the current validation scores.
+The load command writes `reports/reliability/synthetic_load.json` with
+snapshot-consistency results for 10 concurrent and 50 sequential local reads.
+The dated [simulation verification record](reports/simulation_verification_2026-10-17.md)
+summarizes the local checks and remaining stages.
+
 The [scenario catalog](docs/scenario_catalog.md) lists the 25 distinct cases,
 including pod crashes, cross-service network faults, concurrent incidents,
 missing evidence, and healthy operation. Each private rubric records the

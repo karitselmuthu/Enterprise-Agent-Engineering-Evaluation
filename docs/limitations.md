@@ -39,3 +39,6 @@
   hallucination, and token consumption have no validated observations yet.
   The MCP recovery rate comes from one injected outage, so it cannot estimate
   real-world recovery reliability.
+- The five declarative synthetic blueprints use JSON-compatible YAML and
+  generated public observations. Arbitrary YAML syntax, public dataset import,
+  Docker Compose fault injection, and production adapters are not implemented.

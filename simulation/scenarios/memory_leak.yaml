@@ -1,0 +1,81 @@
+{
+  "scenario_id": "SYN-003",
+  "start_at": "2026-10-17T10:00:00Z",
+  "incident": {
+    "server_id": "prod-catalog-003",
+    "service": "catalog-api",
+    "summary": "Catalog memory pressure rising",
+    "severity": "P2"
+  },
+  "allowed_tools": [
+    "get_incident_record",
+    "get_server_metrics",
+    "get_application_logs"
+  ],
+  "timeline": [
+    {
+      "minute": 0,
+      "status": "open",
+      "metrics": {
+        "cpu_percent": 30,
+        "memory_percent": 45,
+        "disk_percent": 40,
+        "network_latency_ms": 20
+      },
+      "logs": [
+        {
+          "severity": "INFO",
+          "message": "Normal memory allocation"
+        }
+      ]
+    },
+    {
+      "minute": 5,
+      "status": "degraded",
+      "metrics": {
+        "cpu_percent": 37,
+        "memory_percent": 63,
+        "disk_percent": 41,
+        "network_latency_ms": 28
+      },
+      "logs": [
+        {
+          "severity": "WARN",
+          "message": "Resident memory increasing"
+        }
+      ]
+    },
+    {
+      "minute": 10,
+      "status": "degraded",
+      "metrics": {
+        "cpu_percent": 45,
+        "memory_percent": 84,
+        "disk_percent": 41,
+        "network_latency_ms": 60
+      },
+      "logs": [
+        {
+          "severity": "WARN",
+          "message": "Memory allocation continues to grow"
+        }
+      ]
+    },
+    {
+      "minute": 15,
+      "status": "degraded",
+      "metrics": {
+        "cpu_percent": 55,
+        "memory_percent": 97,
+        "disk_percent": 42,
+        "network_latency_ms": 140
+      },
+      "logs": [
+        {
+          "severity": "ERROR",
+          "message": "Out-of-memory restart after sustained growth"
+        }
+      ]
+    }
+  ]
+}

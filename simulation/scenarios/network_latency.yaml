@@ -1,0 +1,81 @@
+{
+  "scenario_id": "SYN-005",
+  "start_at": "2026-10-17T10:00:00Z",
+  "incident": {
+    "server_id": "prod-shipping-005",
+    "service": "shipping-api",
+    "summary": "Shipping requests slow across network",
+    "severity": "P2"
+  },
+  "allowed_tools": [
+    "get_incident_record",
+    "get_server_metrics",
+    "get_application_logs"
+  ],
+  "timeline": [
+    {
+      "minute": 0,
+      "status": "open",
+      "metrics": {
+        "cpu_percent": 31,
+        "memory_percent": 46,
+        "disk_percent": 42,
+        "network_latency_ms": 19
+      },
+      "logs": [
+        {
+          "severity": "INFO",
+          "message": "Network round trip near baseline"
+        }
+      ]
+    },
+    {
+      "minute": 5,
+      "status": "degraded",
+      "metrics": {
+        "cpu_percent": 34,
+        "memory_percent": 48,
+        "disk_percent": 42,
+        "network_latency_ms": 95
+      },
+      "logs": [
+        {
+          "severity": "WARN",
+          "message": "Upstream network latency increasing"
+        }
+      ]
+    },
+    {
+      "minute": 10,
+      "status": "degraded",
+      "metrics": {
+        "cpu_percent": 37,
+        "memory_percent": 50,
+        "disk_percent": 43,
+        "network_latency_ms": 220
+      },
+      "logs": [
+        {
+          "severity": "ERROR",
+          "message": "Upstream requests timed out over network"
+        }
+      ]
+    },
+    {
+      "minute": 15,
+      "status": "degraded",
+      "metrics": {
+        "cpu_percent": 39,
+        "memory_percent": 52,
+        "disk_percent": 43,
+        "network_latency_ms": 290
+      },
+      "logs": [
+        {
+          "severity": "ERROR",
+          "message": "Shipping request failures continue on slow network path"
+        }
+      ]
+    }
+  ]
+}

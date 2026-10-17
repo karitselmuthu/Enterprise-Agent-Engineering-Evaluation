@@ -93,3 +93,51 @@ the evaluation files or inspect in-process tool handlers.
 
 Fresh event synthesis during a run, large-scale data volumes, multiple seeds,
 holdout scenarios, and stronger groundedness judging are later milestones.
+
+## Declarative synthetic scenarios
+
+The five files in `simulation/scenarios/` are public scenario blueprints for
+normal operation, CPU saturation, memory growth, database failure, and network
+latency. They use JSON syntax, which is valid YAML, to avoid a runtime YAML
+dependency. `simulation/generators/` validates infrastructure IDs, incident
+alerts, numeric metrics, and log entries, then creates timestamped public
+events. `python3 -m scripts.generate_synthetic` atomically validates and writes
+`data/synthetic/scenarios.jsonl`. No private root-cause or expected-answer
+labels are accepted in these blueprints.
+
+`SimulationStateManager` holds an independent virtual minute per scenario and
+returns frozen, time-bounded `ReplayEngine` snapshots. Its `tools()` method
+creates the same `ToolExecutor` used by the agent. The incident, metric, and
+log adapters register the existing tool names and JSON input schemas;
+caller-supplied permissions can only narrow scenario permissions. The agent
+does not need a separate simulation interface.
+
+```sh
+python3 -m scripts.generate_synthetic
+python3 -m scripts.run_synthetic SYN-002 --minute 5
+python3 -m scripts.run_synthetic SYN-002 --minute 15
+python3 -m scripts.validate_synthetic_load
+python3 -m unittest tests.scenarios.test_synthetic_blueprints tests.load.test_simulation_load -v
+```
+
+The first investigation sees only events through minute 5. The second also
+sees sustained high CPU and the later failure log. The scenario tests verify
+deterministic generation, label rejection, schema errors, permissions, and
+agent integration. The load test performs 10 concurrent and 50 sequential
+local reads with consistent snapshot times. These are functional workloads,
+not capacity benchmarks. The load report is written to
+`reports/reliability/synthetic_load.json`.
+
+## Dataset progression
+
+Stage 1 is this controlled synthetic data and the existing 25-case replay.
+Stage 2 can import selected public log datasets, including LogHub HDFS or BGL
+logs, and observations from an OpenTelemetry demo. Each imported event needs
+normalization to the public incident, metrics, and log schemas. Public logs do
+not supply this project's complete incident timeline or validated root-cause
+labels by themselves; keep any evaluation labels in a separate file.
+
+Stage 3 can run a small controlled application and SQLite-backed dependency
+with Docker Compose, then inject known faults and collect observations through
+the same tool contracts. The current repository has no Compose environment or
+real infrastructure adapters, and no Stage 2 or Stage 3 results are reported.

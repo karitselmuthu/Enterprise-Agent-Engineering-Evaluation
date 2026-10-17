@@ -1,8 +1,11 @@
 """Connect replay observations to the existing tool registry and permissions."""
 
 from src.tools.executor import ToolExecutor
-from src.tools.registry import Tool, ToolRegistry
+from src.tools.registry import ToolRegistry
 
+from simulation.adapters.incidents_api import register_incident_tools
+from simulation.adapters.logs_api import register_log_tools
+from simulation.adapters.metrics_api import register_metric_tools
 from simulation.engine import ReplayEngine
 from simulation.scenario_loader import PUBLIC_TOOL_NAMES
 
@@ -12,18 +15,8 @@ TOOL_NAMES = PUBLIC_TOOL_NAMES
 
 def replay_tools(engine: ReplayEngine, allowed: frozenset[str] | None = None) -> ToolExecutor:
     registry = ToolRegistry()
-    for name, description, field, handler in (
-        ("get_incident_record", "Read the current incident alert.", "incident_id", engine.incident),
-        ("get_server_metrics", "Read server metric samples through the current virtual minute.",
-         "server_id", engine.metrics),
-        ("get_application_logs", "Read application logs through the current virtual minute.",
-         "service", engine.logs),
-        ("get_pod_events", "Read Kubernetes pod events through the current virtual minute.",
-         "pod", engine.pod_events),
-        ("get_service_network_metrics", "Read peer network metrics through the current virtual minute.",
-         "service", engine.network_peers),
-    ):
-        registry.register(Tool(name, description, {"type": "object",
-            "properties": {field: {"type": "string"}}, "required": [field],
-            "additionalProperties": False}, handler))
-    return ToolExecutor(registry, engine.scenario.allowed_tools if allowed is None else allowed)
+    register_incident_tools(registry, engine)
+    register_metric_tools(registry, engine)
+    register_log_tools(registry, engine)
+    permitted = engine.scenario.allowed_tools
+    return ToolExecutor(registry, permitted if allowed is None else permitted & frozenset(allowed))

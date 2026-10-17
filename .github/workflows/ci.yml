@@ -20,6 +20,8 @@ jobs:
       - run: python -m scripts.validate_scenarios
       - run: python -m scripts.validate_reliability
       - run: python -m scripts.report_operational_metrics
+      - run: python -m scripts.generate_synthetic
+      - run: python -m scripts.validate_synthetic_load
   docker-sandbox:
     runs-on: ubuntu-latest
     steps:

@@ -14,6 +14,17 @@ PUBLIC_TOOL_NAMES = frozenset({"get_incident_record", "get_server_metrics",
                                "get_service_network_metrics"})
 
 
+def load_blueprint(path: str | Path) -> dict[str, Any]:
+    """Load the dependency-free JSON subset of YAML used by public blueprints."""
+    try:
+        raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"Invalid JSON-compatible YAML blueprint: {path}") from exc
+    if not isinstance(raw, dict) or _contains_private_key(raw):
+        raise ValueError("Blueprint must be a public scenario object without private labels")
+    return raw
+
+
 @dataclass(frozen=True)
 class Scenario:
     scenario_id: str

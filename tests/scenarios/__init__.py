@@ -1,0 +1,1 @@
+"""Declarative synthetic scenario checks."""
