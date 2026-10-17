@@ -2,7 +2,7 @@
 from dataclasses import dataclass, field
 from typing import Any
 from src.tools.executor import ToolResult
-from src.evidence.schema import EvidenceCard
+from src.evidence.schema import EvidenceCard, InvestigationFinding
 from .investigation import InvestigationRecord
 
 @dataclass
@@ -13,3 +13,4 @@ class AgentState:
     answer: str = ""
     evidence_cards: list[EvidenceCard] = field(default_factory=list)
     investigation: InvestigationRecord | None = None
+    finding: InvestigationFinding | None = None

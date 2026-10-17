@@ -63,7 +63,22 @@ python3 -m scripts.validate_process --trials 5 --output /tmp/process-5.json
 
 The script exits nonzero if any scenario fails its workflow proxy. Review `results[].attempts` for the failed condition. Existing scenario and reliability scripts remain the outcome and fault probes described in the README.
 
-On 2026-10-17, the repository test suite passed 122 tests with 2 optional Docker tests skipped. The 25 replay scenarios passed the five-trial workflow proxy, and the existing local reliability workload passed its seven checks. These results use the deterministic mock backend.
+On 2026-10-17, the repository test suite passed 130 tests with 2 optional Docker tests skipped after the payment-latency extension. The 25 replay scenarios passed the five-trial workflow proxy, and the existing local reliability workload passed its seven checks. These results use the deterministic mock backend.
+
+## Subsequent payment-latency scenario extension
+
+The `SIM-004` workflow now has a sixth read-only tool, `get_database_metrics`.
+`simulation/event_generator.py` and the two JSONL datasets add public pool
+observations and a private expected-tool entry. `simulation/engine.py`,
+`simulation/scenario_loader.py`, and `simulation/adapters/metrics_api.py` expose
+and validate time-bounded database samples. `simulation/faults.py` creates
+missing-sample, timeout, and misleading-log variants without private labels.
+`src/agents/simulation_agent.py` records a typed hypothesis and cites latency
+and pool evidence; `src/evaluation/database_latency_eval.py` scores each
+variant. `scripts/validate_database_latency.py`,
+`tests/scenarios/test_database_latency.py`, and the
+[dated result](../reports/database_latency_scenario_2026-10-17.md) make the
+extension runnable and reviewable. Existing package paths remain in place.
 
 ## Recommended later work
 

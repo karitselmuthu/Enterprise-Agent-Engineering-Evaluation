@@ -20,6 +20,8 @@ def capture_replay(scenario_id: str, minute: int) -> dict:
     incident = results["get_incident_record"].content
     metrics = results["get_server_metrics"].content
     logs = results["get_application_logs"].content
+    database = results.get("get_database_metrics")
+    database_samples = (database.content["samples"] if database and database.ok else [])
     return {
         "scenario_id": scenario_id,
         "minute": minute,
@@ -27,11 +29,14 @@ def capture_replay(scenario_id: str, minute: int) -> dict:
         "status": incident["status"],
         "latest_metrics": metrics["samples"][-1] if metrics["samples"] else None,
         "latest_log": logs["entries"][-1] if logs["entries"] else None,
+        "latest_database_metrics": database_samples[-1] if database_samples else None,
         "visible_metric_minutes": [sample["minute"] for sample in metrics["samples"]],
+        "visible_database_minutes": [sample["minute"] for sample in database_samples],
         "visible_log_minutes": [entry["minute"] for entry in logs["entries"]],
         "selected_tools": [event["tool"] for event in state.trace
                            if event.get("stage") == "selection"],
         "answer": state.answer,
+        "finding_status": state.finding.status if state.finding else None,
     }
 
 
@@ -46,15 +51,19 @@ def validate_mode_a() -> dict:
         "no_alert_before_1010": capture_replay("SIM-004", 5)["status"] == "not_raised",
         "no_future_observations": all(
             all(value <= snapshot["minute"] for value in
-                snapshot["visible_metric_minutes"] + snapshot["visible_log_minutes"])
+                snapshot["visible_metric_minutes"] + snapshot["visible_log_minutes"]
+                + snapshot["visible_database_minutes"])
             for snapshot in snapshots),
         "warning_at_1015": (early["latest_metrics"]["cpu_percent"] == 82
                             and early["latest_metrics"]["memory_percent"] == 73
                             and early["latest_log"]["severity"] == "WARN"
+                            and early["finding_status"] == "insufficient_evidence"
                             and "Check the warning trend" in early["answer"]),
         "failure_at_1025": (failure["latest_metrics"]["cpu_percent"] == 97
                             and failure["latest_metrics"]["memory_percent"] == 89
                             and failure["latest_log"]["severity"] == "ERROR"
+                            and failure["latest_database_metrics"]["active_connections"] == 40
+                            and failure["finding_status"] == "supported_hypothesis"
                             and "Escalate active failures" in failure["answer"]),
         "recovered_at_1035": (recovered["status"] == "resolved"
                               and recovered["latest_metrics"]["cpu_percent"] == 43

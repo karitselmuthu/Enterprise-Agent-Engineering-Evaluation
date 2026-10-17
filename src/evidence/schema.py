@@ -16,3 +16,11 @@ class EvidenceCard:
     raw_reference: str
     extractor_version: str = "rule-v1"
     confidence: float = 1.0
+
+
+@dataclass(frozen=True)
+class InvestigationFinding:
+    hypothesis: str | None
+    status: str
+    evidence_ids: tuple[str, ...]
+    limitations: tuple[str, ...] = ()

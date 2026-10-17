@@ -18,6 +18,7 @@ jobs:
       - run: python -m scripts.validate_mode_a
       - run: python -m scripts.validate_mode_b
       - run: python -m scripts.validate_scenarios
+      - run: python -m scripts.validate_database_latency
       - run: python -m scripts.validate_reliability
       - run: python -m scripts.validate_process --trials 5
       - run: python -m scripts.report_operational_metrics

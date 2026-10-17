@@ -126,6 +126,7 @@ The main checks run from the repository root:
     python3 -m scripts.validate_mode_a
     python3 -m scripts.validate_mode_b
     python3 -m scripts.validate_scenarios
+    python3 -m scripts.validate_database_latency
     python3 -m scripts.validate_reliability
     python3 -m scripts.validate_process --trials 5
     python3 -m scripts.report_operational_metrics
@@ -133,6 +134,10 @@ The main checks run from the repository root:
     python3 scripts/run_evaluation.py
 
 The scenario gate checks tool selection and visible evidence across 25 cases.
+The [database latency scenario report](reports/database_latency_scenario_2026-10-17.md)
+shows the full `SIM-004` workflow and outcomes for missing database metrics,
+tool timeout, and misleading logs. The command writes detailed checks to
+`reports/scenario_results/database_latency.json`.
 The process check repeats each case and verifies lifecycle milestones, budget
 enforcement, and evidence references. Its pass rates are workflow proxies, not
 root-cause accuracy. See the [architecture review comparison](docs/architecture_improvement_comparison.md)

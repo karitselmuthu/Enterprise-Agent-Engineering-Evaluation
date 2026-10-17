@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from src.tools.executor import ToolExecutor, ToolResult
 from src.evidence.store import EvidenceStore
+from src.evidence.schema import InvestigationFinding
 
 from .investigation import InvestigationBudget, InvestigationRecord
 from .state import AgentState
@@ -29,6 +30,16 @@ class SimulationInvestigator:
             return state
         info = alert.content
         metrics = self._call(state, "get_server_metrics", {"server_id": info["server_id"]})
+        latency_sample = (metrics.content["samples"][-1]
+                          if metrics.ok and metrics.content["samples"] else None)
+        latency_elevated = bool(latency_sample and
+                                latency_sample.get("request_latency_ms", 0) >= 200)
+        if latency_elevated:
+            state.investigation.record("latency_detected", signal="request_latency_ms",
+                                       value=latency_sample["request_latency_ms"])
+        database = (self._call(state, "get_database_metrics",
+                               {"database_id": info["database_id"]})
+                    if info.get("database_id") and latency_elevated else None)
         logs = self._call(state, "get_application_logs", {"service": info["service"]})
         pod_events = (self._call(state, "get_pod_events", {"pod": info["pod_name"]})
                       if info.get("pod_name") else None)
@@ -60,6 +71,7 @@ class SimulationInvestigator:
                   signal="incident_status", observation=f"status: {info['status']}",
                   raw_reference=f"tool-result://{run_id}/1",
                   time_start=info.get("observed_at"), time_end=info.get("observed_at"))
+        latency_card = None
         if metrics.ok and metrics.content["samples"]:
             samples = metrics.content["samples"]
             sample = samples[-1]
@@ -67,6 +79,11 @@ class SimulationInvestigator:
                                if key not in {"minute", "timestamp"})
             add(f"metrics at {sample['timestamp']}: {values}", metrics, "metric",
                 "server_metrics", info["service"], sample)
+            if latency_elevated:
+                add(f"application request latency reached {sample['request_latency_ms']}ms",
+                    metrics, "metric", "request_latency_ms", info["service"], sample,
+                    metrics.content["samples"][0])
+                latency_card = store.cards[-1]
             if len(samples) >= 2 and all(item["cpu_percent"] >= 90 for item in samples[-2:]):
                 add("CPU remained above 90% across two samples", metrics, "metric",
                     "cpu_percent", info["service"], sample, samples[-2])
@@ -80,6 +97,15 @@ class SimulationInvestigator:
             if sample["disk_percent"] >= 95:
                 add(f"disk is {sample['disk_percent']}% used", metrics, "metric",
                     "disk_percent", info["service"], sample)
+        database_card = None
+        if database and database.ok and database.content["samples"]:
+            samples = database.content["samples"]
+            sample = samples[-1]
+            add(f"database pool {sample['active_connections']}/{sample['max_connections']} "
+                f"connections active with {sample['waiting_requests']} requests waiting",
+                database, "metric", "database_connection_pool", info["service"], sample,
+                samples[0])
+            database_card = store.cards[-1]
         latest_log = None
         if logs.ok:
             entries = logs.content["entries"]
@@ -121,8 +147,60 @@ class SimulationInvestigator:
         state.evidence_cards = store.cards
         state.investigation.record("evidence_created", evidence_ids=[
             card.evidence_id for card in store.cards])
+        database_hypothesis = bool(database_card and latency_card and
+                                   database.content["samples"][-1]["minute"]
+                                   == latency_sample["minute"] and
+                                   database.content["samples"][-1]["active_connections"]
+                                   == database.content["samples"][-1]["max_connections"]
+                                   and database.content["samples"][-1]["waiting_requests"] > 0)
+        if info.get("database_id") and latency_elevated:
+            state.investigation.record("hypothesis_created",
+                                       hypothesis="database connection pool exhaustion",
+                                       evidence_ids=[card.evidence_id for card in
+                                                     (latency_card, database_card) if card])
         state.investigation.transition("verify")
-        if info["status"] == "healthy":
+        if info.get("database_id") and latency_elevated:
+            conflict = bool(latest_log and "pool healthy" in latest_log["message"].casefold()
+                            and database_hypothesis)
+            state.investigation.record("hypothesis_verified", supported=database_hypothesis,
+                                       conflicting_log=conflict)
+            if database_hypothesis:
+                limitations = ("Latest application log conflicts with measured pool saturation"
+                               if conflict else
+                               "Earlier latency preceded complete pool exhaustion")
+                state.finding = InvestigationFinding(
+                    "database connection pool exhaustion", "supported_hypothesis",
+                    (latency_card.evidence_id, database_card.evidence_id), (limitations,))
+                conclusion = ("Likely database connection pool exhaustion is contributing "
+                              f"to current application latency [{latency_card.evidence_id}] "
+                              f"[{database_card.evidence_id}]. {limitations}. "
+                              "Escalate active failures; investigate database pool utilization "
+                              "and dependency timing "
+                              "before any changes.")
+            else:
+                limitation = (f"Database metrics unavailable ({database.error_code})"
+                              if database and not database.ok else
+                              "Database metrics contain no samples" if database and
+                              not database.content["samples"] else
+                              "Database pool metric is stale relative to request latency"
+                              if database and database.content["samples"][-1]["minute"]
+                              != latency_sample["minute"] else
+                              "Pool pressure is rising but full saturation is not yet observed"
+                              if database else
+                              "Database metrics were not requested")
+                state.finding = InvestigationFinding(
+                    None, "insufficient_evidence", (latency_card.evidence_id,), (limitation,))
+                if database and database.ok and database.content["samples"]:
+                    conclusion = (f"Insufficient evidence for a database-pool cause: "
+                                  f"{limitation}. Check the warning trend and gather another "
+                                  "measurement before changes.")
+                else:
+                    conclusion = (f"Insufficient evidence for a database-pool cause: "
+                                  f"{limitation}. Restore database metrics and verify pool "
+                                  "saturation before recommending changes.")
+            state.answer = (f"Incident {incident_id} ({info['status']}): "
+                            + "; ".join(evidence) + ". " + conclusion)
+        elif info["status"] == "healthy":
             state.answer = (f"No active incident for {incident_id}; current observations "
                             "show healthy service status "
                             + " ".join(f"[{card.evidence_id}]" for card in store.cards) + ".")
@@ -139,6 +217,7 @@ class SimulationInvestigator:
                             + "; ".join(evidence) + ". "
                             + recommendation)
         if (not metrics.ok or not logs.ok
+                or database and not database.ok
                 or pod_events and not pod_events.ok
                 or peer_metrics and not peer_metrics.ok
                 or any(not alert.ok or not log.ok for _, alert, log in related)):
@@ -210,6 +289,7 @@ class SimulationInvestigator:
                             for key in ("id", "service"))
                         for item in content.get("related_incidents", []))
         field = "samples" if name in {"get_server_metrics", "get_service_network_metrics"} \
+            or name == "get_database_metrics" \
             else "entries"
         values = content.get(field)
         if not isinstance(values, list) or not all(isinstance(item, dict) for item in values):
@@ -220,6 +300,8 @@ class SimulationInvestigator:
             "get_application_logs": ("minute", "timestamp", "severity", "message"),
             "get_pod_events": ("minute", "timestamp", "pod", "reason", "message"),
             "get_service_network_metrics": ("minute", "timestamp", "service", "latency_ms"),
+            "get_database_metrics": ("minute", "timestamp", "active_connections",
+                                     "max_connections", "waiting_requests"),
         }.get(name)
         if required is None or not all(all(key in item for key in required)
                                        for item in values):
@@ -232,6 +314,19 @@ class SimulationInvestigator:
                            and not isinstance(item[key], bool)
                            and isfinite(item[key])
                            for key in ("cpu_percent", "memory_percent", "disk_percent"))
+                       and ("request_latency_ms" not in item or
+                            isinstance(item["request_latency_ms"], (int, float))
+                            and not isinstance(item["request_latency_ms"], bool)
+                            and isfinite(item["request_latency_ms"])
+                            and item["request_latency_ms"] >= 0)
+                       for item in values)
+        if name == "get_database_metrics":
+            return isinstance(content.get("database_id"), str) and bool(content["database_id"]) \
+                and all(all(isinstance(item[key], int) and not isinstance(item[key], bool)
+                           for key in ("active_connections", "max_connections",
+                                       "waiting_requests"))
+                       and 0 <= item["active_connections"] <= item["max_connections"]
+                       and item["max_connections"] > 0 and item["waiting_requests"] >= 0
                        for item in values)
         if name == "get_service_network_metrics":
             return all(isinstance(item["service"], str)

@@ -12,7 +12,7 @@ only `data/simulation/scenarios.jsonl`.
 | SIM-001 | CPU saturation | Sustained high CPU and delayed requests |
 | SIM-002 | Memory leak | Rising memory and an out-of-memory restart |
 | SIM-003 | Disk exhaustion | Near-full disk and write failure |
-| SIM-004 | Database connection pool exhaustion | Pool warnings, exhaustion, latency, failure, recovery |
+| SIM-004 | Database connection pool exhaustion | Request latency, database pool utilization and waiters, application logs, recovery |
 | SIM-005 | Database unavailable | Database health warning and refused connections |
 | SIM-006 | Kubernetes pod crash loop | Pod restart events and container-exit logs |
 | SIM-007 | Network latency | One slow peer path and one healthy peer path |
@@ -58,7 +58,8 @@ The payment case's private rubric includes:
   "expected_tools": [
     "get_incident_record",
     "get_server_metrics",
-    "get_application_logs"
+    "get_application_logs",
+    "get_database_metrics"
   ],
   "expected_behavior": "Identify database connection exhaustion as a likely cause and recommend further investigation.",
   "evaluation_minute": 25
@@ -71,6 +72,7 @@ Regenerate the deterministic files and inspect the evaluation report:
 python3 -m simulation.event_generator
 python3 -m scripts.run_simulation
 python3 -m scripts.validate_scenarios
+python3 -m scripts.validate_database_latency
 python3 -m unittest tests.integration.test_scenario_catalog -v
 ```
 
@@ -82,3 +84,7 @@ distinct alerts, so the 25 scenario cases represent 26 simulated alert records.
 The separate `scenario_validation.json` report checks all 25 complete
 investigations with order-independent tool selection and visible-source
 evidence. It records conservative cause and recommendation cues separately.
+`validate_database_latency` also runs the same payment investigation with
+missing database samples, an injected database-tool timeout, and contradictory
+application logs. Its deterministic evaluator checks tool authorization,
+time ordering, evidence references, hypothesis status, and safe uncertainty.

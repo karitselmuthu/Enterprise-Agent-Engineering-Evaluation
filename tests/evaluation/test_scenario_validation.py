@@ -15,7 +15,10 @@ class ScenarioValidationTests(unittest.TestCase):
         self.assertTrue(report["foundation_passed"])
         self.assertEqual(report["tool_selection_rate"], 1)
         self.assertEqual(report["evidence_retrieval_rate"], 1)
-        self.assertEqual(report["root_cause_supported_proxy_rate"], 0)
+        self.assertGreater(report["root_cause_supported_proxy_rate"], 0)
+        self.assertLess(report["root_cause_supported_proxy_rate"], 0.1)
+        self.assertTrue(next(item for item in report["results"]
+                             if item["scenario_id"] == "SIM-004")["root_cause_supported_proxy"])
         self.assertGreater(report["recommendation_cue_rate"], 0)
         self.assertLess(report["recommendation_cue_rate"], 1)
         self.assertIsNone(next(item for item in report["results"]

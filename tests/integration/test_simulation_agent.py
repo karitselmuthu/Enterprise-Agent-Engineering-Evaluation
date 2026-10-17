@@ -18,7 +18,7 @@ class SimulationAgentTests(unittest.TestCase):
         self.scenarios = load_scenarios()
 
     def test_all_scenarios_execute_with_permitted_tools(self):
-        self.assertEqual(len(TOOL_NAMES), 5)
+        self.assertEqual(len(TOOL_NAMES), 6)
         for identifier, scenario in self.scenarios.items():
             with self.subTest(identifier=identifier):
                 state = SimulationInvestigator(replay_tools(

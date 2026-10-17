@@ -109,12 +109,20 @@ def _timestamp(minute: int) -> str:
 
 def _payment_events() -> list[dict]:
     events = []
-    for minute, cpu, memory, message, severity, status in PAYMENT_TIMELINE:
+    pool = ((12, 0, 45), (16, 0, 82), (32, 2, 240), (38, 8, 360),
+            (40, 42, 640), (40, 65, 810), (25, 5, 290), (14, 0, 90))
+    for (minute, cpu, memory, message, severity, status), (active, waiting, latency) in zip(
+            PAYMENT_TIMELINE, pool):
         timestamp = _timestamp(minute)
         events.append({"minute": minute, "timestamp": timestamp,
                        "metrics": {"cpu_percent": cpu, "memory_percent": memory,
                                    "disk_percent": 45, "network_latency_ms": 20 + max(0, cpu - 35) * 3,
+                                   "request_latency_ms": latency,
                                    "timestamp": timestamp},
+                       "database_metrics": {"timestamp": timestamp,
+                                            "active_connections": active,
+                                            "max_connections": 40,
+                                            "waiting_requests": waiting},
                        "logs": [{"timestamp": timestamp, "severity": severity,
                                  "message": message}],
                        "status": status, "faults": []})
@@ -200,6 +208,9 @@ def build_records() -> tuple[list[dict], list[dict]]:
             allowed.append("get_pod_events")
         if scenario_id in {"SIM-007", "SIM-025"}:
             allowed.append("get_service_network_metrics")
+        if scenario_id == "SIM-004":
+            incident["database_id"] = "payment-db"
+            allowed.append("get_database_metrics")
         public.append({"scenario_id": scenario_id,
                        "incident": incident,
                        "allowed_tools": allowed,
@@ -211,6 +222,7 @@ def build_records() -> tuple[list[dict], list[dict]]:
                       "expected_findings": findings,
                       "expected_tools": ["get_incident_record", "get_server_metrics",
                                          "get_application_logs"]
+                                        + (["get_database_metrics"] if scenario_id == "SIM-004" else [])
                                         + (["get_pod_events"] if scenario_id == "SIM-006" else [])
                                         + (["get_service_network_metrics"]
                                            if scenario_id in {"SIM-007", "SIM-025"} else []),

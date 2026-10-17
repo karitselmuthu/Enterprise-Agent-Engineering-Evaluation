@@ -11,7 +11,7 @@ DEFAULT_SCENARIOS = Path(__file__).resolve().parents[1] / "data/simulation/scena
 PRIVATE_KEYS = {"root_cause", "expected_findings", "expected_tools", "expected_behavior"}
 PUBLIC_TOOL_NAMES = frozenset({"get_incident_record", "get_server_metrics",
                                "get_application_logs", "get_pod_events",
-                               "get_service_network_metrics"})
+                               "get_service_network_metrics", "get_database_metrics"})
 
 
 def load_blueprint(path: str | Path) -> dict[str, Any]:
@@ -80,7 +80,11 @@ def load_scenarios(path: str | Path = DEFAULT_SCENARIOS) -> dict[str, Scenario]:
                                             or not incident["pod_name"]
                                             or "get_pod_events" not in allowed_tools)
                     or incident.get("network_scope") is True
-                    and "get_service_network_metrics" not in allowed_tools):
+                    and "get_service_network_metrics" not in allowed_tools
+                    or "database_id" in incident and
+                    (not isinstance(incident["database_id"], str)
+                     or not incident["database_id"]
+                     or "get_database_metrics" not in allowed_tools)):
                 raise ValueError("incident observation tool not permitted")
             previous = -1
             started_at = None
@@ -109,6 +113,18 @@ def load_scenarios(path: str | Path = DEFAULT_SCENARIOS) -> dict[str, Scenario]:
                                    or item["timestamp"] != event["timestamp"]
                                    for item in observations)):
                         raise ValueError(f"invalid {field} observations")
+                database = event.get("database_metrics")
+                if database is not None and (
+                    "database_id" not in incident or not isinstance(database, dict)
+                    or database.get("timestamp") != event["timestamp"]
+                    or any(not isinstance(database.get(key), int)
+                           or isinstance(database.get(key), bool)
+                           or database[key] < 0
+                           for key in ("active_connections", "max_connections",
+                                       "waiting_requests"))
+                    or database["max_connections"] == 0
+                    or database["active_connections"] > database["max_connections"]):
+                    raise ValueError("invalid database_metrics observations")
                 if (any(not all(isinstance(item[key], str) and item[key]
                                 for key in ("pod", "reason", "message"))
                         for item in event.get("pod_events", []))

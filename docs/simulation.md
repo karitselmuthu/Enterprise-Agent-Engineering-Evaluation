@@ -10,7 +10,7 @@ flowchart LR
     Generator --> Truth[Private evaluation labels]
     Public --> Replay[Virtual-clock replay engine]
     Public --> Live[Wall-clock event publisher]
-    Replay --> Tools[Five standard tools]
+    Replay --> Tools[Standard read-only tools]
     Live --> Tools
     Tools --> Agent[Baseline investigator]
     Agent --> Evaluation[Evaluation runner]
@@ -21,7 +21,7 @@ flowchart LR
 `data/simulation/scenarios.jsonl` and labels to
 `data/evaluation_datasets/simulation_ground_truth.jsonl`. Runtime replay
 loads only the public file. The evaluator joins labels after an agent run. The
-agent receives a `ToolExecutor` with five read-only contracts:
+agent receives a `ToolExecutor` with six read-only contracts:
 
 | Tool | Input | Observation |
 | --- | --- | --- |
@@ -30,6 +30,7 @@ agent receives a `ToolExecutor` with five read-only contracts:
 | `get_application_logs` | `service` | Log entries through current virtual minute |
 | `get_pod_events` | `pod` | Kubernetes pod events through current virtual minute |
 | `get_service_network_metrics` | `service` | Peer latency samples through current virtual minute |
+| `get_database_metrics` | `database_id` | Connection-pool utilization and waiting requests through current virtual minute |
 
 Most scenarios have observations at minutes 0, 5, 10, and 15. `SIM-004` has
 eight observations from 10:00 through 10:35 UTC at five-minute intervals. The virtual clock
@@ -38,7 +39,8 @@ and log events from appearing in tool responses. Scenarios include CPU and
 memory pressure, database and network faults, deployment regression, missing
 telemetry, timeout, conflicting signals, recovery, repeated alerts, permission
 denial, and healthy operation. `SIM-006` adds pod events, `SIM-007` and
-`SIM-025` add peer network samples, and `SIM-010` exposes a second incident ID
+`SIM-025` add peer network samples, `SIM-004` adds database-pool samples and
+request latency, and `SIM-010` exposes a second incident ID
 with service-specific logs. These observations use the same permission checks
 and future-event bounds as the original tools. The permission scenario removes
 metric access through the standard executor policy. The original tiny fixtures
@@ -51,6 +53,7 @@ Run from the repository root:
 python3 -m simulation.event_generator
 python3 -m scripts.run_simulation
 python3 -m scripts.validate_mode_a
+python3 -m scripts.validate_database_latency
 python3 -m unittest tests.unit.test_simulation tests.integration.test_simulation_agent tests.integration.test_scenario_catalog -v
 ```
 
@@ -63,10 +66,10 @@ label string appears in the answer. It is **not** semantic root-cause accuracy.
 The baseline investigator summarizes observations and does not diagnose most
 causes; this gives a meaningful starting point for later agent improvements.
 
-The 25-case replay records 80 attempted tool calls, with 78 successes. All
+The 25-case replay records 81 attempted tool calls, with 79 successes. All
 expected tool names were selected. One metrics call timed out and one was
-denied by policy. The exact root-cause label appeared in zero of 19 causal
-answers. That
+denied by policy. The exact root-cause label appeared in one of 19 causal
+answers (the payment case). That
 rate is a narrow string check, not a measure of whether the agent fulfilled
 the case-specific behavior rubric.
 
@@ -75,6 +78,13 @@ The Mode A acceptance check replays `SIM-004` at virtual minutes 15, 25, and
 the incident develops, and the final status is resolved. `--minute 15` (or
 `25` or `35`) prints a single observation and agent answer. The fixed replay
 does not wait for real time.
+
+The dedicated payment evaluator runs four variants of `SIM-004` at minute 25:
+baseline, missing database metrics, a database-tool timeout, and misleading
+logs. The baseline conclusion is a cited *likely* cause. Missing or failed
+database telemetry produces an insufficient-evidence finding despite an error
+log naming pool exhaustion. Misleading logs are reported as conflicting with
+the measured pool state. See the [outcome report](../reports/database_latency_scenario_2026-10-17.md).
 
 Mode B (`simulation/live.py`) publishes the same public event stream one event
 per configurable wall-clock interval. The first event is available immediately.

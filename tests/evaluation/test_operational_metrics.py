@@ -19,11 +19,11 @@ class OperationalMetricTests(unittest.TestCase):
         self.assertEqual(len(metrics), 10)
         self.assertEqual(metrics["tool_selection_accuracy"]["numerator"], 25)
         self.assertEqual(metrics["tool_selection_accuracy"]["denominator"], 25)
-        self.assertEqual(metrics["tool_execution_success_rate"]["numerator"], 78)
-        self.assertEqual(metrics["tool_execution_success_rate"]["denominator"], 80)
-        self.assertEqual(metrics["average_tool_calls"]["value"], 3.2)
+        self.assertEqual(metrics["tool_execution_success_rate"]["numerator"], 79)
+        self.assertEqual(metrics["tool_execution_success_rate"]["denominator"], 81)
+        self.assertEqual(metrics["average_tool_calls"]["value"], 3.24)
         self.assertEqual(metrics["recovery_success_rate"]["denominator"], 1)
-        self.assertEqual(report["diagnostics"]["strict_completion_proxy"]["numerator"], 3)
+        self.assertEqual(report["diagnostics"]["strict_completion_proxy"]["numerator"], 4)
         for name in ("task_completion_rate", "root_cause_identification_accuracy",
                      "evidence_groundedness", "hallucination_rate", "token_consumption"):
             self.assertIsNone(metrics[name]["value"])

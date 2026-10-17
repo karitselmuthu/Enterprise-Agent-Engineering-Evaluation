@@ -44,6 +44,16 @@ class ReplayEngine:
                          "observed_at": self.observed_at(),
                          "status": "available" if samples else "missing", "samples": samples})
 
+    def database_metrics(self, database_id: str) -> dict:
+        if database_id != self.scenario.incident.get("database_id"):
+            raise KeyError(f"Unknown database: {database_id}")
+        self._check_fault("get_database_metrics")
+        samples = [{"minute": event["minute"], **event["database_metrics"]}
+                   for event in self.visible_events() if event.get("database_metrics") is not None]
+        return deepcopy({"database_id": database_id, "observed_minute": self.clock.minute,
+                         "observed_at": self.observed_at(),
+                         "status": "available" if samples else "missing", "samples": samples})
+
     def logs(self, service: str) -> dict:
         services = {self.scenario.incident["service"]} | {
             item["service"] for item in self.scenario.incident.get("related_incidents", [])}
