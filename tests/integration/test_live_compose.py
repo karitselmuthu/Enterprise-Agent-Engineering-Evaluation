@@ -21,7 +21,7 @@ class LiveComposeTests(unittest.TestCase):
                 try:
                     with urlopen("http://127.0.0.1:8765/health", timeout=1):
                         break
-                except (URLError, TimeoutError):
+                except (URLError, TimeoutError, ConnectionError):
                     time.sleep(0.5)
             else:
                 self.fail("Live Compose service did not become healthy")
@@ -29,6 +29,10 @@ class LiveComposeTests(unittest.TestCase):
                 "LIVE-001")
             self.assertTrue(all(item.ok for item in state.tool_results))
             self.assertIn("No active incident", state.answer)
+        except Exception:
+            subprocess.run(command + ["ps", "-a"], check=False, timeout=15)
+            subprocess.run(command + ["logs", "live-demo"], check=False, timeout=15)
+            raise
         finally:
             subprocess.run(command + ["down", "-v"], check=False, timeout=60)
 
