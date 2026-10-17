@@ -40,5 +40,9 @@
   The MCP recovery rate comes from one injected outage, so it cannot estimate
   real-world recovery reliability.
 - The five declarative synthetic blueprints use JSON-compatible YAML and
-  generated public observations. Arbitrary YAML syntax, public dataset import,
-  Docker Compose fault injection, and production adapters are not implemented.
+  generated public observations. Arbitrary YAML syntax and source-specific
+  public dataset importers are not implemented. A generic JSONL log mapper is
+  available for user data, but it does not create incident ground truth.
+- The optional Compose demo uses one local Python service and SQLite. Its
+  control endpoint has no authentication and must remain bound to local
+  loopback. It is not a production adapter or a full observability stack.

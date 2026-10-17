@@ -1,0 +1,22 @@
+services:
+  live-demo:
+    profiles: ["live-demo"]
+    build:
+      context: .
+      dockerfile: simulation/live_stack/Dockerfile
+    ports:
+      - "127.0.0.1:8765:8765"
+    volumes:
+      - live_state:/state
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: 128m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  live_state:

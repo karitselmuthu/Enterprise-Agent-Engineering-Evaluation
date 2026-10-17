@@ -1,0 +1,13 @@
+{
+  "fields": {
+    "timestamp": "timestamp",
+    "service": "service",
+    "severity": "level",
+    "message": "message"
+  },
+  "severity_map": {
+    "DEBUG": "INFO",
+    "WARNING": "WARN",
+    "CRITICAL": "ERROR"
+  }
+}

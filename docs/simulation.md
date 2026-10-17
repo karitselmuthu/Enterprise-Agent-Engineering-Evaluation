@@ -131,13 +131,41 @@ not capacity benchmarks. The load report is written to
 ## Dataset progression
 
 Stage 1 is this controlled synthetic data and the existing 25-case replay.
-Stage 2 can import selected public log datasets, including LogHub HDFS or BGL
-logs, and observations from an OpenTelemetry demo. Each imported event needs
-normalization to the public incident, metrics, and log schemas. Public logs do
-not supply this project's complete incident timeline or validated root-cause
-labels by themselves; keep any evaluation labels in a separate file.
+Stage 2 has a user-data import path, with no bundled public dataset. The
+`scripts.import_public_logs` command takes a user-provided JSONL file and a
+field mapping. It normalizes UTC timestamp, service, severity, and message to
+`data/imported/`, which Git ignores. This prepares a log observation source
+for later scenario construction; it does not create incident timelines or
+private root-cause labels. Selected LogHub HDFS or BGL logs, or observations
+from an OpenTelemetry demo, need source-specific parsing before they fit this
+JSONL mapping. Review their licenses and data fields when you choose a source.
 
-Stage 3 can run a small controlled application and SQLite-backed dependency
-with Docker Compose, then inject known faults and collect observations through
-the same tool contracts. The current repository has no Compose environment or
-real infrastructure adapters, and no Stage 2 or Stage 3 results are reported.
+```sh
+python3 -m scripts.import_public_logs path/to/your/logs.jsonl \
+  --mapping configs/public_logs.example.json \
+  --output data/imported/my_dataset/logs.jsonl
+```
+
+Stage 3 has an optional local prototype. `compose.yaml` enables a single
+lightweight Python service under the `live-demo` profile. It uses SQLite to
+record healthy, database-failure, and recovery events. The host port is bound
+to loopback, and the agent reads incident, metrics, and logs through the same
+tool names and schemas as replay. Fault injection is a separate control route;
+the agent never receives a hidden cause label. The Compose profile keeps this
+container out of the default setup.
+
+```sh
+docker compose --profile live-demo up --build -d
+python3 -m scripts.run_live_demo
+python3 -m scripts.inject_live_fault database_failure
+python3 -m scripts.run_live_demo
+python3 -m scripts.inject_live_fault recovered
+python3 -m scripts.run_live_demo
+docker compose --profile live-demo down
+```
+
+The SQLite named volume persists between runs. Use `docker compose --profile
+live-demo down -v` only when you intend to erase this demo state. The local
+prototype does not include a separate database server, observability stack,
+production authentication, or an evaluation dataset. These remain future
+Stage 3 work; no Stage 3 accuracy score is reported.

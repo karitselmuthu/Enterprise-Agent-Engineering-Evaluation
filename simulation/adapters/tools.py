@@ -13,10 +13,15 @@ from simulation.scenario_loader import PUBLIC_TOOL_NAMES
 TOOL_NAMES = PUBLIC_TOOL_NAMES
 
 
-def replay_tools(engine: ReplayEngine, allowed: frozenset[str] | None = None) -> ToolExecutor:
+def contract_tools(backend: object, permitted: frozenset[str]) -> ToolExecutor:
+    """Register the shared contracts around any observation backend."""
     registry = ToolRegistry()
-    register_incident_tools(registry, engine)
-    register_metric_tools(registry, engine)
-    register_log_tools(registry, engine)
+    register_incident_tools(registry, backend)
+    register_metric_tools(registry, backend)
+    register_log_tools(registry, backend)
+    return ToolExecutor(registry, permitted)
+
+
+def replay_tools(engine: ReplayEngine, allowed: frozenset[str] | None = None) -> ToolExecutor:
     permitted = engine.scenario.allowed_tools
-    return ToolExecutor(registry, permitted if allowed is None else permitted & frozenset(allowed))
+    return contract_tools(engine, permitted if allowed is None else permitted & frozenset(allowed))

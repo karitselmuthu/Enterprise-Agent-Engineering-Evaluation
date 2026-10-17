@@ -103,6 +103,43 @@ snapshot-consistency results for 10 concurrent and 50 sequential local reads.
 The dated [simulation verification record](reports/simulation_verification_2026-10-17.md)
 summarizes the local checks and remaining stages.
 
+### Optional Stage 2 and Stage 3 paths
+
+Stage 2 is ready for data you choose later. Place your own JSONL logs outside
+the tracked fixtures, copy and edit `configs/public_logs.example.json` to map
+your source fields, then normalize them:
+
+```sh
+python3 -m scripts.import_public_logs path/to/your/logs.jsonl \
+  --mapping configs/public_logs.example.json \
+  --output data/imported/my_dataset/logs.jsonl
+```
+
+The importer validates UTC timestamps, service, severity, and message. It
+does not infer incident timelines or root-cause labels, and imported files are
+ignored by Git. No public dataset is bundled.
+
+Stage 3 has an **opt-in local demo** using a small Python HTTP service and
+SQLite. It is separate from the default mock tests. With Docker running:
+
+```sh
+docker compose --profile live-demo up --build -d
+python3 -m scripts.run_live_demo
+python3 -m scripts.inject_live_fault database_failure
+python3 -m scripts.run_live_demo
+python3 -m scripts.inject_live_fault recovered
+python3 -m scripts.run_live_demo
+docker compose --profile live-demo down
+```
+
+The demo binds only to `127.0.0.1:8765` on the host. Its incident, metric, and
+log observations use the same agent tool contracts. The named SQLite volume
+persists across restarts; `docker compose --profile live-demo down -v` also
+removes that demo data. This is a controlled local option, not a production
+integration or a scored Stage 3 evaluation. See [simulation setup](docs/simulation.md).
+The [optional setup verification record](reports/optional_data_live_setup_2026-10-17.md)
+lists the checks and limits.
+
 The [scenario catalog](docs/scenario_catalog.md) lists the 25 distinct cases,
 including pod crashes, cross-service network faults, concurrent incidents,
 missing evidence, and healthy operation. Each private rubric records the

@@ -39,6 +39,7 @@ test in a separate job. The local Docker test is opt in with
 | Evaluation | Metrics, dataset validation, judge response validation, bias probes, benchmark gate | Dataset → injected judge → report, plus MCP and retrieval agent states scored through the evaluator, including invalid judge output and failed incident lookup |
 | Simulation | Virtual clock, public loader, fixture regeneration, future-event hiding, unknown resource | Twenty-five scenario runs through the standard tool executor, missing data, timeout, denied tool, and label separation |
 | Declarative synthetic simulation | Five blueprint generation, invalid metrics, private-label rejection | Agent → standard tool executor → frozen replay snapshot; 10 concurrent and 50 sequential local reads |
+| Optional data and live setup | JSONL log mapping, invalid timestamps and severities, local URL restriction | Loopback HTTP fault and recovery through standard tools; opt-in Compose smoke test |
 
 ## Scenario evaluation
 
