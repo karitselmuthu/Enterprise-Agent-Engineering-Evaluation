@@ -25,3 +25,6 @@ Run from the repository root:
 elapsed times vary by machine. The current implementation does not import
 public datasets or run a Docker Compose fault environment; neither stage has
 an evaluation result yet. See [simulation details](../docs/simulation.md).
+
+Both the Python test job and Docker sandbox job passed for commit `65cd469` in
+[GitHub Actions run 38984577737](https://github.com/karitselmuthu/Enterprise-Agent-Engineering-Evaluation/actions/runs/38984577737).
