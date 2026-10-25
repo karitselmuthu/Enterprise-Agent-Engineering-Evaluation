@@ -15,6 +15,7 @@ class Tool:
     environments: frozenset[str] = frozenset({"dev", "staging", "prod"})
     production_requires_approval: bool = True
     verifier: Callable[[Any], bool] | None = None
+    resource_argument: str | None = None
 
     def validate(self, args: dict[str, Any]) -> None:
         if not isinstance(args, dict):

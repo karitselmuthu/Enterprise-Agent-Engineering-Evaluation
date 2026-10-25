@@ -2,11 +2,13 @@
 
 - The default tool selector is deterministic. The Ollama adapter has mocked
   protocol tests, but no live-model quality evaluation yet.
-- The phase 6.1 thread timeout reports a timeout but cannot stop a running
-  Python handler. Only trusted read-only handlers are registered.
-- The new host policy blocks side effects by default and requires a verifier
-  for explicitly enabled mutations, but no production identity provider,
-  approval workflow, or operational write tool is implemented. In-process code
+- Read-only tool timeout reports a timeout but cannot stop a running Python
+  thread. Mutating tools run in a child process that is terminated on timeout;
+  external side effects already sent cannot be rolled back.
+- The host policy blocks side effects by default and requires a verifier,
+  scoped approval where applicable, and a durable audit sink for enabled
+  mutations. No production identity provider, approval issuance workflow,
+  or operational write tool is implemented. In-process code
   can call a registered handler directly and bypass the executor; the policy
   is not a sandbox for untrusted plugins.
 - Replay evidence cards point to in-memory tool results. They are deterministic

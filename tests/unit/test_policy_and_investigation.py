@@ -3,9 +3,11 @@
 import unittest
 import tempfile
 from pathlib import Path
+from datetime import datetime, timedelta, timezone
 
 from src.agents.investigation import InvestigationBudget, InvestigationRecord
-from src.policy.engine import PolicyContext
+from src.policy.audit import AuditSink
+from src.policy.engine import Approval, PolicyContext, arguments_digest
 from src.tools.executor import ToolExecutor, ToolStatus
 from src.tools.registry import Tool, ToolRegistry
 
@@ -13,10 +15,15 @@ from src.tools.registry import Tool, ToolRegistry
 class PolicyAndInvestigationTests(unittest.TestCase):
     def setUp(self):
         self.calls = []
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.marker = Path(self.temp.name) / "calls"
+        self.audit = AuditSink(Path(self.temp.name) / "audit.jsonl", b"x" * 32)
         self.registry = ToolRegistry()
 
         def restart(service: str):
-            self.calls.append(service)
+            with self.marker.open("a") as stream:
+                stream.write(service + "\n")
             return {"service": service, "accepted": True}
 
         self.registry.register(Tool(
@@ -24,14 +31,15 @@ class PolicyAndInvestigationTests(unittest.TestCase):
             "properties": {"service": {"type": "string"}}, "required": ["service"]},
             restart, risk="high", side_effects=True, idempotent=False,
             required_scopes=frozenset({"service:restart"}),
-            verifier=lambda result: result["service"] in self.calls))
+            verifier=lambda result: result["service"] in self.marker.read_text().splitlines(),
+            resource_argument="service"))
 
     def test_mutation_denied_by_default_even_when_name_allowed(self):
         result = ToolExecutor(self.registry, frozenset({"restart"})).execute(
             "restart", {"service": "api"})
         self.assertEqual(result.error_code, "policy_denied")
         self.assertEqual(result.status, ToolStatus.POLICY_DENIED)
-        self.assertEqual(self.calls, [])
+        self.assertFalse(self.marker.exists())
 
     def test_scope_and_approval_are_separate_requirements(self):
         arguments = {"service": "api"}
@@ -43,14 +51,17 @@ class PolicyAndInvestigationTests(unittest.TestCase):
             PolicyContext(environment="prod", allow_mutations=True,
                           scopes=frozenset({"service:restart"}))).execute("restart", arguments)
         self.assertEqual(without_approval.error_code, "policy_denied")
-        self.assertEqual(self.calls, [])
+        self.assertFalse(self.marker.exists())
+        approval = Approval("APR-1", "operator-1", "restart", "api",
+                            arguments_digest(arguments),
+                            datetime.now(timezone.utc) + timedelta(minutes=5))
         approved = ToolExecutor(self.registry, frozenset({"restart"}),
-            PolicyContext(environment="prod", allow_mutations=True,
+            PolicyContext(environment="prod", actor_id="operator-1", allow_mutations=True,
                           scopes=frozenset({"service:restart"}),
-                          approved_tools=frozenset({"restart"}))).execute("restart", arguments)
+                          approvals=(approval,)), self.audit).execute("restart", arguments)
         self.assertTrue(approved.ok)
         self.assertTrue(approved.side_effect_verified)
-        self.assertEqual(self.calls, ["api"])
+        self.assertEqual(self.marker.read_text().splitlines(), ["api"])
 
     def test_mutation_without_verifier_is_rejected(self):
         registry = ToolRegistry()
@@ -67,7 +78,7 @@ class PolicyAndInvestigationTests(unittest.TestCase):
                                lambda: {"accepted": True}, side_effects=True,
                                verifier=lambda _result: False))
         result = ToolExecutor(registry, frozenset({"change"}),
-            PolicyContext(allow_mutations=True)).execute("change", {})
+            PolicyContext(actor_id="operator-1", allow_mutations=True), self.audit).execute("change", {})
         self.assertEqual(result.error_code, "verification_failed")
         self.assertFalse(result.ok)
 

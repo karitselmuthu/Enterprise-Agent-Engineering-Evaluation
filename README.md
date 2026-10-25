@@ -147,6 +147,8 @@ The process check repeats each case and verifies lifecycle milestones, budget
 enforcement, and evidence references. Its pass rates are workflow proxies, not
 root-cause accuracy. See the [architecture review comparison](docs/architecture_improvement_comparison.md)
 for changed paths, recommended paths, and deferred work.
+The [governance hardening guide](docs/governance_hardening.md) describes scoped
+approvals, isolated mutating calls, durable audit records, and their limits.
 The reliability workload includes concurrent and sequential investigations,
 timeouts, malformed responses, and temporary MCP failure. Generated JSON
 reports go under reports/. The [operational metric definitions](docs/verification_strategy.md#operational-metric-contract)
