@@ -57,6 +57,7 @@ needed only for the coding sandbox and the optional live demo.
 | Lecture 7.1–7.5 | Optional local judge, deterministic metrics, bias probes, trajectory evaluation, and offline benchmark | [Evaluation guide](docs/lecture_07_evaluation.md) |
 | Simulation | Virtual-clock replay, live polling of synthetic events, and standard incident/metric/log tool adapters | [Simulation guide](docs/simulation.md) |
 | Architecture review improvements | Host policy gate, read-only investigation lifecycle and budget, source-linked evidence cards, event records, and repeated-run process checks | [Structure comparison and scope](docs/architecture_improvement_comparison.md) |
+| Governance foundation | Scoped approval checks, isolated mutating tool execution, and HMAC-chained local audit events in the standard tool executor | [Implementation and limits](docs/governance_hardening.md); [architecture status](docs/Enterprise%20AI%20Agent%20Governance%20Architecture.md) |
 
 The [implementation maturity review](reports/implementation_maturity_review_2026-10-17.md)
 checks the code paths against the architecture claims, records local test and
@@ -125,6 +126,39 @@ when you want to remove its demo data. This is a local prototype, not a
 production integration or a scored live evaluation.
 
 ## Verify behavior
+
+### Test and scenario map
+
+The full `unittest` discovery command in **Start here** runs test files in
+`tests/unit`, `tests/integration`, `tests/scenarios`, `tests/evaluation`, and
+`tests/load`. The [CI workflow](.github/workflows/ci.yml) runs that suite and
+the validation scripts below. The table shows where to find each scenario
+family and how to run a focused check from the repository root.
+
+| Scenario family | What is checked | Focused command or catalog |
+| --- | --- | --- |
+| Core agent and tools | Selection, argument schemas, allowlists, failures, timeouts, context, skills, and coding-agent controls | `python3 -m unittest discover -s tests/unit -v` |
+| Replay incidents | All 25 `SIM-001`–`SIM-025` cases, including healthy, missing data, denied tools, recovery, conflicting signals, and multiple incidents | [All 25 cases and expected evidence](docs/scenario_catalog.md); `python3 -m scripts.validate_scenarios` |
+| Database latency branches | `SIM-004` with complete evidence, early or stale metrics, missing metrics, tool timeout, misleading log, and malformed sample | `python3 -m unittest tests.scenarios.test_database_latency -v`; `python3 -m scripts.validate_database_latency` |
+| Synthetic blueprints | Five additional `SYN` cases at different virtual times, plus permission and fixture validation | `python3 -m unittest tests.scenarios.test_synthetic_blueprints -v` |
+| Governance | Default denial, scoped and expired approvals, wrong target, audit integrity, verifier failure, and mutation timeout; several planned `GOV-001`–`GOV-015` cases remain partial or pending | [GOV case-by-case status](docs/Enterprise%20AI%20Agent%20Governance%20Architecture.md#8-governance-scenario-coverage); `python3 -m unittest tests.unit.test_governance tests.unit.test_policy_and_investigation tests.scenarios.test_governance_scenario -v` |
+| Agent integrations | MCP allowlist and failures, SQLite resume, retrieval citations, evidence budgets, live polling, and the local HTTP demo | `python3 -m unittest discover -s tests/integration -v` |
+| Evaluation and reliability | Offline judge fixtures, bias probes, benchmark behavior, process and operational metrics, bounded investigations, and concurrent/sequential load | `python3 -m unittest discover -s tests/evaluation -v`; `python3 -m unittest discover -s tests/load -v` |
+| Optional Docker paths | Generated-code sandbox and the Compose fault flow | `RUN_DOCKER_INTEGRATION=1 python3 -m unittest tests.integration.test_coding_sandbox -v`; `RUN_LIVE_COMPOSE=1 python3 -m unittest tests.integration.test_live_compose -v` |
+
+Install the project first with `python3 -m pip install -e .`; MCP integration
+tests need the declared `mcp` dependency. The local HTTP integration test
+binds a loopback port, so a sandbox that blocks socket binding cannot run the
+full suite. The Docker tests need a working daemon and their environment
+flags; they are skipped in ordinary discovery and run separately in CI.
+
+These tests verify local behavior and deterministic fixtures. The 25 replay
+cases and five synthetic blueprints are committed data; the `GOV` IDs are a
+coverage plan with explicit implemented, partial, and pending statuses in the
+architecture document. Neither set is a production safety or diagnosis
+accuracy certification.
+
+### Validation scripts
 
 The main checks run from the repository root:
 
